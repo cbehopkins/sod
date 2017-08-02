@@ -396,7 +396,6 @@ func (src Puzzle) MaxDifficultyRand() (dst Puzzle) {
 	rndSrcCloser := make(chan struct{})
 	go func() {
 		r := rand.New(rand.NewSource(99))
-		// TBD this routine will leak
 		for {
 			select {
 			case _, ok := <-rndSrcCloser:
@@ -406,7 +405,6 @@ func (src Puzzle) MaxDifficultyRand() (dst Puzzle) {
 				}
 
 			default:
-				// TBD seed with timestamp
 				rnd_value := r.Intn(puz_len)
 				rndSrc <- rnd_value
 			}

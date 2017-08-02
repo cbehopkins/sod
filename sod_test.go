@@ -31,10 +31,13 @@ func TestBas1(t *testing.T) {
 	//log.Println(expectedResult)
 
 	testPuzzle := NewPuzzle()
-	result := testPuzzle.SelfCheck()
-	if result != nil {
-		log.Fatal("Self check fail", result)
-	}
+  sc := func () {
+  	result := testPuzzle.SelfCheck()
+	  if result != nil {
+		  log.Fatal("Self check fail", result)
+	  }
+  }
+  sc()
 
 	// Set Value,Col,Row
 	// numbered from 0
@@ -66,22 +69,14 @@ func TestBas1(t *testing.T) {
 	testPuzzle.SetValC(4, 4, 8)
 	testPuzzle.SetValC(8, 5, 8)
 	testPuzzle.SetValC(1, 7, 8)
-	//log.Println(testPuzzle)
+  //log.Println("Row 7\n",testPuzzle)
+  sc()
 
-	result = testPuzzle.SelfCheck()
-	if false {
-		if result != nil {
-			log.Fatal("Self check fail", result)
-		}
+	if true {
 		testPuzzle.Solve()
-		result = testPuzzle.SelfCheck()
-
-		//log.Println(testPuzzle)
-		if result != nil {
-			log.Fatal("Self check fail", result)
-		}
+    sc()
 	}
-	if false {
+	if true{
 		duplicatePuz := testPuzzle.Duplicate()
 		log.Println("Duplicate Before", duplicatePuz)
 		clearFunc := func(crd Coord) bool {
@@ -97,11 +92,7 @@ func TestBas1(t *testing.T) {
 
 	if false {
 		testPuzzle.TrySolver()
-		result = testPuzzle.SelfCheck()
-		//log.Println(testPuzzle)
-		if result != nil {
-			log.Fatal("Self check fail", result)
-		}
+    sc()
 		testPuzzle.Check(expectedResult)
 	}
 

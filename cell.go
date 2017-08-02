@@ -56,7 +56,7 @@ func containsValue(val Value, values []Value) bool {
 	return false
 }
 func (cl Cell) NotValues(nv []Value) []Value {
-	ret_arr := make([]Value, 0, cl.Len()-len(nv))
+	ret_arr := make([]Value, 0, cl.Len())
 	for _, val := range cl.Values() {
 		if !containsValue(val, nv) {
 			ret_arr = append(ret_arr, val)

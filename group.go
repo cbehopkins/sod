@@ -9,7 +9,16 @@ type Group struct {
 	crdList []Coord
 	pz      *Puzzle
 }
-
+func (gr Group) String () string {
+  ret_str := "["
+  spacer := ""
+  for _,itm := range gr.crdList {
+    ret_str += spacer + itm.String()
+    spacer = " "
+  }
+  ret_str+= "]"
+  return ret_str
+}
 func (gr Group) Items() []Coord {
 	return gr.crdList
 }
@@ -71,10 +80,12 @@ func (gr Group) SelfCheck() error {
 			// This is a cell that it could be one of many values
 			for _, val := range cl.Val {
 				// For each of the possible values
-				// check it's not one that's marked as solved
+        // set map by this point has had solved values removed
 				_, ok := set_map[val]
 				if !ok {
+				  // check it's not one that's marked as solved
 					log.Printf("Range:%v\nValue:%v\n", gr, val)
+          log.Fatal (pz)
 					return errors.New("Set missing self value")
 				}
 			}

@@ -104,9 +104,18 @@ func (pz Puzzle) SetValC(value Value, col, row int) {
 func (pz Puzzle) SetVal(value Value, co Coord) {
 	cl := pz.GetCel(co)
 	// Set the value for the specified cell
-	// TBD only set if needed
+  if cl.Len() == 1 {
+    if !cl.Exist(value) {
+      log.Fatal("Told to set a value that is not an option")
+    }
+    // Early abort
+    //return
+  }
 	cl.SetVal(value)
+  pz.runRemove(value,co)
+}
 
+func (pz Puzzle) runRemove(value Value, co Coord) {
 	rmFunc := func(cr Coord) bool {
 		pz.RemoveVal(value, cr)
 		return true
@@ -154,7 +163,8 @@ func (pz Puzzle) RemoveVal(value Value, co Coord) {
 	err := cel.RemoveVal(value)
 	if err == nil {
 		if cel.Len() == 1 {
-			pz.SetVal(cel.Val[0], co)
+			//pz.SetVal(cel.Val[0], co)
+      pz.runRemove(cel.Val[0],co)
 		}
 	}
 }
@@ -163,8 +173,9 @@ func (pz Puzzle) RemoveVals(values []Value, co Coord) {
 	err := cel.RemoveVals(values)
 	if err == nil {
 		if cel.Len() == 1 {
-			pz.SetVal(cel.Val[0], co)
-		}
+			//pz.SetVal(cel.Val[0], co)
+      pz.runRemove(cel.Val[0],co)
+      }
 	}
 }
 func (pz Puzzle) Len() int {
