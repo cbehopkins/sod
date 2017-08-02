@@ -23,13 +23,47 @@ func (pz Puzzle) Difficulty() int {
 func (pz Puzzle) AddDifficulty(val int) {
 	*pz.difficulty += val
 }
+//for each column, return the max number of items
+func (pz Puzzle) maxColItems () (ret_arr []int) {
+  pz_size := pz.Len()
+  ret_arr = make([]int,pz_size)
+  for column:=0; column<pz_size;column++ {
+    for row := 0; row < pz_size; row++ {
+
+     tmp_len := pz.Puz[column][row].Len()
+     if tmp_len > ret_arr[column]{
+     ret_arr[column] = tmp_len}
+     }
+  }
+  return ret_arr
+}
+func maxWidth (colWid int) int {
+  ret_val := 1
+  for ;colWid>1; colWid-- {
+    ret_val += 2
+  }
+  return ret_val
+}
+func numSpaces (cnt int) string {
+  ret_str := ""
+
+  for i:=0; i<cnt; i++ {
+    ret_str+=" "
+  }
+  return ret_str
+}
 func (pz Puzzle) String() string {
 	pz_size := pz.Len()
+  colWidths := pz.maxColItems()
 	ret_str := "[\n"
 	for row := 0; row < pz_size; row++ {
 		ret_str += "  [row=" + strconv.Itoa(row) + "\n    "
 		for column := 0; column < pz_size; column++ {
-			ret_str += "(" + strconv.Itoa(column) + ")" + pz.Puz[column][row].String()
+      tmp_string := pz.Puz[column][row].String()
+      maxW := maxWidth(colWidths[column])
+      add_width := 2+maxW-(len(tmp_string))
+      tmp_string += numSpaces(add_width)
+			ret_str += "(" + strconv.Itoa(column) + ")" + tmp_string
 		}
 		ret_str += "\n  ]\n"
 	}
@@ -104,15 +138,15 @@ func (pz Puzzle) SetValC(value Value, col, row int) {
 func (pz Puzzle) SetVal(value Value, co Coord) {
 	cl := pz.GetCel(co)
 	// Set the value for the specified cell
-  if cl.Len() == 1 {
-    if !cl.Exist(value) {
-      log.Fatal("Told to set a value that is not an option")
-    }
-    // Early abort
-    //return
-  }
+	if cl.Len() == 1 {
+		if !cl.Exist(value) {
+			log.Fatal("Told to set a value that is not an option")
+		}
+		// Early abort
+		//return
+	}
 	cl.SetVal(value)
-  pz.runRemove(value,co)
+	pz.runRemove(value, co)
 }
 
 func (pz Puzzle) runRemove(value Value, co Coord) {
@@ -164,7 +198,7 @@ func (pz Puzzle) RemoveVal(value Value, co Coord) {
 	if err == nil {
 		if cel.Len() == 1 {
 			//pz.SetVal(cel.Val[0], co)
-      pz.runRemove(cel.Val[0],co)
+			pz.runRemove(cel.Val[0], co)
 		}
 	}
 }
@@ -174,8 +208,8 @@ func (pz Puzzle) RemoveVals(values []Value, co Coord) {
 	if err == nil {
 		if cel.Len() == 1 {
 			//pz.SetVal(cel.Val[0], co)
-      pz.runRemove(cel.Val[0],co)
-      }
+			pz.runRemove(cel.Val[0], co)
+		}
 	}
 }
 func (pz Puzzle) Len() int {
@@ -357,9 +391,32 @@ func (pz Puzzle) Check(result [][]Value) bool {
 	for i := 0; i < pz_len; i++ {
 		for j := 0; j < pz_len; j++ {
 			cord := Coord{i, j}
-			if pz.GetCel(cord).Val[0] != result[i][j] {
+			if pz.GetCel(cord).Val[0] != result[j][i] {
+        log.Printf("Coord %v,%v not match %v,%v",i,j,pz.GetCel(cord).Val[0], result[j][i])
 				return false
 			}
+		}
+	}
+	return true
+}
+func (pz Puzzle) Match(ref Puzzle) bool {
+	// Check puzzles contain the same data
+	pz_len := pz.Len()
+	for i := 0; i < pz_len; i++ {
+		for j := 0; j < pz_len; j++ {
+			ref_cord := Coord{i, j}
+			ref_cel := ref.GetCel(ref_cord)
+      pz_cel := pz.GetCel(ref_cord)
+
+			if ref_cel.Len() == pz_cel.Len()  {
+        ref_values := ref_cel.Values()
+        puz_values:= pz_cel.Values()
+        for i,v := range ref_values {
+          if puz_values[i] != v {
+            return false
+          }
+        }
+			} else {return false}
 		}
 	}
 	return true

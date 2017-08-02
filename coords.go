@@ -1,8 +1,8 @@
 package sod
 
 import (
-"strconv"
-"log"
+	"log"
+	"strconv"
 )
 
 // Coordinate specified as {x,y}
@@ -16,11 +16,11 @@ func (cr Coord) String() string {
 	//	ret_str += spacer + strconv.Itoa(v)
 	//	spacer = " "
 	//}
-  if len(cr) != 2 {
-    log.Fatal("Coord incorrect length")
-  }
-  ret_str += "x=" + strconv.Itoa(cr.GetColumn()) + " "
-  ret_str += "y=" + strconv.Itoa(cr.GetRow())
+	if len(cr) != 2 {
+		log.Fatal("Coord incorrect length")
+	}
+	ret_str += "x=" + strconv.Itoa(cr.GetColumn()) + " "
+	ret_str += "y=" + strconv.Itoa(cr.GetRow())
 	ret_str += "]"
 	return ret_str
 }

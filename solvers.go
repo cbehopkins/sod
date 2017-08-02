@@ -182,12 +182,12 @@ func (pz *Puzzle) TwinSolver() {
 			valMap[value] = itm
 		}
 	}
-	cntExamine := func(cm map[int]*CrdCnt) (result_ch , del_ch []Chain) {
+	cntExamine := func(cm map[int]*CrdCnt) (result_ch, del_ch []Chain) {
 		// Look at the cells that have 2 items in them
 		// Is there another cell that has the same paiting
 		// So called Naked Twins
 		result_ch = make([]Chain, 0)
-    del_ch = make([]Chain, 0)
+		del_ch = make([]Chain, 0)
 
 		val, ok := cm[2]
 		if ok {
@@ -199,11 +199,12 @@ func (pz *Puzzle) TwinSolver() {
 				nl.crd = crd
 				chain = append(chain, *nl)
 			}
-			result_ch = append(result_ch,chain.SearchChain()...)
+			result_ch = chain.SearchChain()
+      //if len(result_ch)>0 {log.Println("Rx things to delete", result_ch)}
 		}
 
-		return 
-    }
+		return
+	}
 
 	valGrind := func(value Value, cells Group, vm map[Value]*CrdCnt) bool {
 		// Grind through each of the values in a cell (that's not the one we're given)
@@ -259,9 +260,11 @@ func (pz *Puzzle) TwinSolver() {
 		// We only want to parse through the maps once as it is heavy duty
 		gr.ExAll(coordFunc)
 		// Now examine the maps
-		rm_chain,del_chain := cntExamine(cntMap)
+		rm_chain, del_chain := cntExamine(cntMap)
 		gr.RmChain(rm_chain)
-    gr.RmLinks(del_chain)
+    if false {
+		gr.RmLinks(del_chain)
+    }
 		valExamine(valMap)
 		return true
 	}

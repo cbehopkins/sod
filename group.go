@@ -9,15 +9,16 @@ type Group struct {
 	crdList []Coord
 	pz      *Puzzle
 }
-func (gr Group) String () string {
-  ret_str := "["
-  spacer := ""
-  for _,itm := range gr.crdList {
-    ret_str += spacer + itm.String()
-    spacer = " "
-  }
-  ret_str+= "]"
-  return ret_str
+
+func (gr Group) String() string {
+	ret_str := "["
+	spacer := ""
+	for _, itm := range gr.crdList {
+		ret_str += spacer + itm.String()
+		spacer = " "
+	}
+	ret_str += "]"
+	return ret_str
 }
 func (gr Group) Items() []Coord {
 	return gr.crdList
@@ -80,12 +81,12 @@ func (gr Group) SelfCheck() error {
 			// This is a cell that it could be one of many values
 			for _, val := range cl.Val {
 				// For each of the possible values
-        // set map by this point has had solved values removed
+				// set map by this point has had solved values removed
 				_, ok := set_map[val]
 				if !ok {
-				  // check it's not one that's marked as solved
+					// check it's not one that's marked as solved
 					log.Printf("Range:%v\nValue:%v\n", gr, val)
-          log.Fatal (pz)
+					log.Fatal(pz)
 					return errors.New("Set missing self value")
 				}
 			}
@@ -94,12 +95,16 @@ func (gr Group) SelfCheck() error {
 
 	return nil
 }
+
 // rmChain takes a list of chains as a job list
 // Each chain is one job
 // Each chain is a list of links (fake cells)
 // We operate on cells not in the list
 // Removing the values in the link from those cells not in the list
 func (gr Group) RmChain(result_ch []Chain) {
+  if len (result_ch)>0 {
+    //log.Println("Removing Chain", result_ch, gr)
+  }
 	pz := gr.pz
 	// Each chain contains a list of Links(cells)
 	for _, chain := range result_ch {
@@ -122,16 +127,17 @@ func (gr Group) RmChain(result_ch []Chain) {
 		rmFunc := func(crd Coord) bool {
 			for _, cti := range coord_to_ignore {
 				if cti.Eq(crd) {
+          //log.Println("Skipping cord because it is us")
 					return true
 				}
 			}
 			for va := range values_to_remove {
 				if pz.ValExist(va, crd) {
+			    //log.Printf("Removing value %v, from crd %v\n", va,crd)
 					rm_list = append(rm_list, va)
 				}
 			}
 			pz.RemoveVals(rm_list, crd)
-			//log.Printf("Removing value %v, from crd %v\n", va,crd)
 			//pz.RemoveVals(va, crd)
 			// Revert the slice to no items, full capacity
 			rm_list = rm_list[0:0]
@@ -141,20 +147,22 @@ func (gr Group) RmChain(result_ch []Chain) {
 		gr.ExAll(rmFunc)
 	}
 }
+
 // This will remove the values in the links
 // from the coordinates the link point to
 // Does it as a batch operation for efficiency
-func (gr Group) RmLinks (result_ch []Chain) {
-pz := gr.pz
-for _, chain := range result_ch {
- var link Cell
- for _, link = range chain {
-  crd := link.crd
-  vals := link.Val
-  pz.RemoveVals(vals,crd)
- }
+func (gr Group) RmLinks(result_ch []Chain) {
+	pz := gr.pz
+	for _, chain := range result_ch {
+		var link Cell
+		for _, link = range chain {
+			crd := link.crd
+			vals := link.Val
+			pz.RemoveVals(vals, crd)
+		}
+	}
 }
-}
+
 // For a group
 // Go through all the coords in the group, except the one supplied
 // and run the function

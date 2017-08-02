@@ -15,8 +15,8 @@ func NewChain(input [][]int) *Chain {
 	}
 	return &ret_val
 }
-func (ch *Chain) Add (input Cell) {
-  *ch = append(*ch, input)
+func (ch *Chain) Add(input Cell) {
+	*ch = append(*ch, input)
 }
 func (ch Chain) searchLink(startOffset, offset int, start, target Value, maxDepth int) []Cell {
 	// Look through the chain for where we can get to from the target Vl
