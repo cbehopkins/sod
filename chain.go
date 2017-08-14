@@ -65,11 +65,11 @@ func (ch Chain) SearchChain() []Chain {
 	for offset, link := range ch {
 		startVl := link.Val[0]
 		targetVl := link.Val[1]
-		//log.Printf("New search starting at offset:%v, chain starting with %v\n",offset,startVl)
+		//log.Printf("New search starting at offset:%v, chain starting with %v\n", offset, startVl)
 		resultList := ch.searchLink(offset, offset+1, startVl, targetVl, maxDepth)
 		if len(resultList) > 0 {
 			resultList = append(resultList, link)
-			//log.Println("****************Success:",resultList)
+			//log.Println("****************Success:", resultList)
 			ret_list = append(ret_list, resultList)
 		}
 	}

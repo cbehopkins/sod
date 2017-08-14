@@ -4,10 +4,43 @@ import (
 	"errors"
 	"log"
 	"math/rand"
+	"strconv"
 	"sync"
 )
 
+func (pz Puzzle) SolveAll() error {
+
+	pz.Solve()
+	res := pz.Solved()
+
+	if res == ErrZeroCell {
+		return res
+	}
+	if res == nil {
+		log.Println("Solved with simple solver")
+		return res
+	}
+
+	log.Println("Trying complex solver")
+	// This keeps experimenting until solved - very slow!
+	pz.TrySolver()
+	res = pz.Solved()
+
+	if res == ErrZeroCell {
+		return res
+	}
+	if res == nil {
+		log.Println("Solved with complex solver")
+		return res
+	}
+
+	log.Println("Not solvable")
+	return nil
+
+}
 func (pz Puzzle) Solve() {
+	//	outerRun := true
+	//	for outerRun {
 	run := true
 	for run {
 		run = false
@@ -17,6 +50,7 @@ func (pz Puzzle) Solve() {
 		run = run || pz.LoneItems()
 	}
 	pz.TwinSolver()
+	//}
 }
 
 // For a given candidate look at each value in the candidate
@@ -25,15 +59,18 @@ func (pz Puzzle) Solve() {
 // we can therefore run a set on that candiddate cell
 // to that value
 func (pz Puzzle) GroupEliminate(candidate Coord) (value_modified bool) {
-
+	//log.Println("GroupEliminate called on", candidate)
 	// Candidate must not exist in group
 	// To make other code easier, don't error, just move on
 	if pz.GetCel(candidate).Len() <= 1 {
+		//log.Println("Nothing to do")
 		return false
 	}
+
 	allGroups := pz.AllGroupSets()
 
 	for _, currentPossible := range pz.GetCel(candidate).Values() {
+		//log.Println("Checking if value is in another cell", currentPossible)
 		var badValue Value
 		// This is the group itterator
 		// It's called once per coord as we go through the group
@@ -131,6 +168,13 @@ type CrdCnt struct {
 	LocList *Group
 }
 
+func (cc CrdCnt) String() string {
+	ret_str := "CrdCnt[\n"
+	ret_str += "Cnt:" + strconv.Itoa(cc.Cnt+1) + ","
+	ret_str += cc.LocList.String()
+	ret_str += "\n]"
+	return ret_str
+}
 func NewCrdCnt(crd Coord, pz *Puzzle) *CrdCnt {
 	itm := new(CrdCnt)
 	itm.Cnt = 0
@@ -145,11 +189,113 @@ func (cc *CrdCnt) Add(crd Coord) {
 	cc.Cnt++
 	cc.set(crd)
 }
-func (pz *Puzzle) TwinSolver() {
-	// For all the twin processing stuff we want:
-	// * The coordinates of cells with 2(,3,4) etc items in them
-	// * A count of how many times each number appears (and which cells this is)
+func (pz *Puzzle) cntMapFunc(crd Coord, cell *Cell, values []Value, cntMap map[int]*CrdCnt) {
 
+	// Populating a map from count of items in cells to list
+	valLen := len(values)
+	itm, ok := cntMap[valLen]
+	if !ok {
+		itm = NewCrdCnt(crd, pz)
+	} else {
+		itm.Add(crd)
+	}
+	cntMap[valLen] = itm
+
+}
+
+func (pz *Puzzle) valMapFunc(crd Coord, cell *Cell, values []Value, valMap map[Value]*CrdCnt) {
+
+	// Populating a map from value to to cells that occurs in
+	for _, value := range values {
+		itm, ok := valMap[value]
+		if !ok {
+			itm = NewCrdCnt(crd, pz)
+		} else {
+			itm.Add(crd)
+		}
+		valMap[value] = itm
+	}
+}
+func (pz *Puzzle) buildMaps(crd Coord, cntMap map[int]*CrdCnt, valMap map[Value]*CrdCnt) bool {
+	cell := pz.GetCel(crd)
+	values := cell.Values()
+	pz.cntMapFunc(crd, cell, values, cntMap)
+	pz.valMapFunc(crd, cell, values, valMap)
+	return true
+}
+
+// For one co-ord Count , make a chain of loops
+func (pz *Puzzle) mkChain(input *CrdCnt) (result_ch []Chain) {
+	chain := make(Chain, 0)
+	for _, crd := range input.LocList.Items() {
+		cel := pz.GetCel(crd)
+		nl := NewCellValues(cel.Values())
+		nl.crd = crd
+		chain = append(chain, *nl)
+	}
+	result_ch = chain.SearchChain()
+	return result_ch
+}
+func (pz *Puzzle) cntExamine(cm map[int]*CrdCnt) (result_ch, del_ch []Chain) {
+	// Look at the cells that have 2 items in them
+	// Is there another cell that has the same paiting
+	// So called Naked Twins
+	result_ch = make([]Chain, 0)
+	del_ch = make([]Chain, 0)
+
+	val, ok := cm[2]
+	if ok {
+		//log.Println("These are two entry cells", val)
+		result_ch = pz.mkChain(val)
+		//if len(result_ch)>0 {log.Println("Rx things to delete", result_ch)}
+	}
+	return
+}
+func (pz *Puzzle) valGrind(value Value, cells Group, vm map[Value]*CrdCnt) bool {
+	modified := false
+	// Grind through each of the values in a cell (that's not the one we're given)
+	// looking for another value that appears in one of the cells this appears in
+	for _, crd := range cells.Items() {
+		cel := pz.GetCel(crd)
+		for _, val := range cel.Values() {
+			if val != value && vm[val].Cnt == 1 {
+				// Don't examine our self
+				// Only bother to check values that also only appear in 2 cells
+				if cells.valCheck(val) {
+					// If the value appears in all the cells we appear in
+					// Then we have a match
+					// Build a list of values that are not val,value
+					rem_vals := cel.NotValues([]Value{val, value})
+
+					if len(rem_vals) > 0 {
+						cel.RemoveVals(rem_vals)
+						modified = true
+						//log.Printf("%v is paired with %v: Remove %v\n", val, value, rem_vals)
+					}
+				}
+
+			}
+		}
+	}
+	return modified
+}
+func (pz *Puzzle) valExamine(vm map[Value]*CrdCnt) bool {
+	modified := false
+	// If a value appears in only 2 cells
+	// together with another value that only appears in the same 2 cells
+	// It's a hidden twin
+	// Therefore any other values in those cells can be removed
+	for value, crdCount := range vm {
+		if crdCount.Cnt == 1 {
+			//log.Println("The value appears twice", value)
+			tmp := pz.valGrind(value, *crdCount.LocList, vm)
+			modified = tmp || modified
+		}
+	}
+	return modified
+}
+func (pz *Puzzle) twinWorkGroup(gr Group) bool {
+	var modified bool
 	// This is confusing, so let's be totally clear
 	// This will be a map from count of items in cells to list of coords
 	// i.e. 1 -> Cells that have one ite, 2-> cells that have 2 items
@@ -158,117 +304,40 @@ func (pz *Puzzle) TwinSolver() {
 	// i.e 1 -> Cells that contain the value 1
 	var valMap map[Value]*CrdCnt
 
-	cntMapFunc := func(crd Coord, cell *Cell, values []Value) {
-		// Populating a map from count of items in cells to list
-		valLen := len(values)
-		itm, ok := cntMap[valLen]
-		if !ok {
-			itm = NewCrdCnt(crd, pz)
-		} else {
-			itm.Add(crd)
-		}
-		cntMap[valLen] = itm
+	//log.Printf("Examining Group %v\n", pz.StringGroup(gr))
+	// Clear the maps before each group
+	cntMap = make(map[int]*CrdCnt)
+	valMap = make(map[Value]*CrdCnt)
+	// Populate the maps
+	// We only want to parse through the maps once as it is heavy duty
+	lCoordFunc := func(crd Coord) bool {
+		return pz.buildMaps(crd, cntMap, valMap)
 	}
-
-	valMapFunc := func(crd Coord, cell *Cell, values []Value) {
-		// Populating a map from value to to cells that occurs in
-		for _, value := range values {
-			itm, ok := valMap[value]
-			if !ok {
-				itm = NewCrdCnt(crd, pz)
-			} else {
-				itm.Add(crd)
-			}
-			valMap[value] = itm
-		}
-	}
-	cntExamine := func(cm map[int]*CrdCnt) (result_ch, del_ch []Chain) {
-		// Look at the cells that have 2 items in them
-		// Is there another cell that has the same paiting
-		// So called Naked Twins
-		result_ch = make([]Chain, 0)
-		del_ch = make([]Chain, 0)
-
-		val, ok := cm[2]
-		if ok {
-			//log.Println("These are two entry cells", val)
-			chain := make(Chain, 0)
-			for _, crd := range val.LocList.Items() {
-				cel := pz.GetCel(crd)
-				nl := NewCellValues(cel.Values())
-				nl.crd = crd
-				chain = append(chain, *nl)
-			}
-			result_ch = chain.SearchChain()
-      //if len(result_ch)>0 {log.Println("Rx things to delete", result_ch)}
-		}
-
-		return
-	}
-
-	valGrind := func(value Value, cells Group, vm map[Value]*CrdCnt) bool {
-		// Grind through each of the values in a cell (that's not the one we're given)
-		// looking for another value that appears in one of the cells this appears in
-		for _, crd := range cells.Items() {
-			cel := pz.GetCel(crd)
-			for _, val := range cel.Values() {
-				if val != value && vm[val].Cnt == 1 {
-					// Don't examine our self
-					// Only bother to check values that also only appear in 2 cells
-					if cells.valCheck(val) {
-						// If the value appears in all the cells we appear in
-						// Then we have a match
-						// Build a list of values that are not val,value
-						rem_vals := cel.NotValues([]Value{val, value})
-
-						if len(rem_vals) > 0 {
-							cel.RemoveVals(rem_vals)
-							//log.Printf("%v is paired with %v: Remove %v\n", val, value, rem_vals)
-						}
-					}
-
-				}
-			}
-		}
-		return true
-	}
-	valExamine := func(vm map[Value]*CrdCnt) {
-		// If a value appears in only 2 cells
-		// together with another value that only appears in the same 2 cells
-		// It's a hidden twin
-		// Therefore any other values in those cells can be removed
-		for value, crdCount := range vm {
-			if crdCount.Cnt == 1 {
-				//log.Println("The value appears twice", value)
-				valGrind(value, *crdCount.LocList, vm)
-			}
-		}
-	}
-	coordFunc := func(crd Coord) bool {
-		cell := pz.GetCel(crd)
-		values := cell.Values()
-		cntMapFunc(crd, cell, values)
-		valMapFunc(crd, cell, values)
-		return true
-	}
-	mastFunc := func(gr Group) bool {
-		//log.Printf("Examining Group %v\n", pz.StringGroup(gr))
-		// Clear the maps before each group
-		cntMap = make(map[int]*CrdCnt)
-		valMap = make(map[Value]*CrdCnt)
-		// Populate the maps
-		// We only want to parse through the maps once as it is heavy duty
-		gr.ExAll(coordFunc)
-		// Now examine the maps
-		rm_chain, del_chain := cntExamine(cntMap)
+	gr.ExAll(lCoordFunc)
+	// Now examine the maps
+	rm_chain, _ := pz.cntExamine(cntMap)
+	if len(rm_chain) > 0 {
 		gr.RmChain(rm_chain)
-    if false {
-		gr.RmLinks(del_chain)
-    }
-		valExamine(valMap)
+		modified = true
+	}
+
+	// return true if we modified anything
+	tmpMod := pz.valExamine(valMap)
+	return modified || tmpMod
+
+}
+func (pz *Puzzle) TwinSolver() (modified bool) {
+	// For all the twin processing stuff we want:
+	// * The coordinates of cells with 2(,3,4) etc items in them
+	// * A count of how many times each number appears (and which cells this is)
+
+	mastFunc := func(gr Group) bool {
+		tmpMod := pz.twinWorkGroup(gr)
+		modified = modified || tmpMod
 		return true
 	}
 	pz.ExAllGroups(mastFunc)
+	return modified
 }
 
 type runCount struct {

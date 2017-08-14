@@ -200,7 +200,54 @@ func samplePuzzle1() (testPuzzle *Puzzle, expectedResult [][]Value) {
 	testPuzzle.SetValC(8, 5, 8)
 	return testPuzzle, expectedResult
 }
+func samplePuzzle2() (testPuzzle *Puzzle, expectedResult [][]Value) {
+	expectedResult = [][]Value{}
+	//log.Println(expectedResult)
+	testPuzzle = NewPuzzle()
 
+	// Let's set up some twins for examination
+	testPuzzle.SetValC(6, 0, 0)
+	testPuzzle.SetValC(2, 4, 0)
+	testPuzzle.SetValC(9, 8, 0)
+	// row 1
+	testPuzzle.SetValC(1, 1, 1)
+	testPuzzle.SetValC(3, 3, 1)
+	testPuzzle.SetValC(7, 5, 1)
+	testPuzzle.SetValC(5, 7, 1)
+	// row 2
+	testPuzzle.SetValC(3, 2, 2)
+	testPuzzle.SetValC(1, 6, 2)
+	// row 3
+	testPuzzle.SetValC(9, 1, 3)
+	testPuzzle.SetValC(2, 7, 3)
+
+	// row 4
+	testPuzzle.SetValC(2, 0, 4)
+	testPuzzle.SetValC(8, 3, 4)
+	testPuzzle.SetValC(7, 4, 4)
+	testPuzzle.SetValC(5, 5, 4)
+	testPuzzle.SetValC(3, 8, 4)
+	// row 5
+	testPuzzle.SetValC(5, 2, 5)
+	testPuzzle.SetValC(1, 4, 5)
+	testPuzzle.SetValC(4, 6, 5)
+
+	// row 6
+	testPuzzle.SetValC(7, 1, 6)
+	testPuzzle.SetValC(8, 4, 6)
+	testPuzzle.SetValC(9, 7, 6)
+
+	// row 7
+	testPuzzle.SetValC(1, 2, 7)
+	testPuzzle.SetValC(4, 4, 7)
+	testPuzzle.SetValC(8, 6, 7)
+
+	// row 8
+	testPuzzle.SetValC(2, 3, 8)
+	testPuzzle.SetValC(5, 4, 8)
+	testPuzzle.SetValC(9, 5, 8)
+	return testPuzzle, expectedResult
+}
 func TestSolver(t *testing.T) {
 
 	testPuzzle, expectedResult := samplePuzzle0()
@@ -220,8 +267,8 @@ func TestSolver(t *testing.T) {
 		testPuzzle.TrySolver()
 		sc()
 		if !testPuzzle.Check(expectedResult) {
-      log.Fatal("Unexpected Result", testPuzzle)
-    }
+			log.Fatal("Unexpected Result", testPuzzle)
+		}
 	}
 }
 
@@ -235,35 +282,35 @@ func TestDuplicate(t *testing.T) {
 	}
 	sc()
 
-		testPuzzle.Solve()
-		sc()
-		duplicatePuz := testPuzzle.Duplicate()
-		//log.Println("Duplicate Before", duplicatePuz)
-		clearFunc := func(crd Coord) bool {
-			cel := duplicatePuz.GetCel(crd)
-			//log.Println("Clearing",cel,crd)
-			cel.SetVal(1)
-			return true
+	testPuzzle.Solve()
+	sc()
+	duplicatePuz := testPuzzle.Duplicate()
+	//log.Println("Duplicate Before", duplicatePuz)
+	clearFunc := func(crd Coord) bool {
+		cel := duplicatePuz.GetCel(crd)
+		//log.Println("Clearing",cel,crd)
+		cel.SetVal(1)
+		return true
+	}
+	duplicatePuz.ExAll(clearFunc)
+	// TBD check duplicate is all 1s
+	pz_size := testPuzzle.Len()
+	expected_duplicate := make([][]Value, pz_size)
+	for i := 0; i < pz_size; i++ {
+		tmp_arr := make([]Value, pz_size)
+		for j := 0; j < pz_size; j++ {
+			tmp_arr[j] = 1
 		}
-		duplicatePuz.ExAll(clearFunc)
-		// TBD check duplicate is all 1s
-    pz_size := testPuzzle.Len()
-    expected_duplicate := make ([][]Value, pz_size)
-    for i:=0;i<pz_size;i++ {
-      tmp_arr := make ([]Value,pz_size)
-      for j:=0;j<pz_size;j++{
-        tmp_arr[j] = 1
-      }
-      expected_duplicate[i] = tmp_arr
-    }
-    if !duplicatePuz.Check(expected_duplicate) {
-      log.Fatal("Unexpected Result should be all 1s", duplicatePuz)
-    }
+		expected_duplicate[i] = tmp_arr
+	}
+	if !duplicatePuz.Check(expected_duplicate) {
+		log.Fatal("Unexpected Result should be all 1s", duplicatePuz)
+	}
 
-		testPuzzle.TrySolver()
-		sc()
-		// This will fail if duplicate deleted main puzzle
-		testPuzzle.Check(expectedResult)
+	testPuzzle.TrySolver()
+	sc()
+	// This will fail if duplicate deleted main puzzle
+	testPuzzle.Check(expectedResult)
 }
 
 func TestTwin(t *testing.T) {
@@ -275,55 +322,26 @@ func TestTwin(t *testing.T) {
 	}
 
 	//log.Println(testPuzzle)
-  // ar this stage 
-  // 0,7 should be [4,5,8]
-  // 0,8 [3,4,5,7]
-  // after they should be just [4,5] 
-  value0 := testPuzzle.GetCel(Coord{0,7}).Values()
-  value1 := testPuzzle.GetCel(Coord{0,8}).Values()
-  if len(value0) != 3{
-    log.Fatal("expected", value0)
-  }
-  if len(value1) != 4{
-    log.Fatal("expected", value1)
-  }
-  testPuzzle.TwinSolver()
-  value0 = testPuzzle.GetCel(Coord{0,7}).Values()
-  value1 = testPuzzle.GetCel(Coord{0,8}).Values()
- if len(value0) != 2{
-    log.Fatal("expected", value0)
-  }
- if len(value1) != 2{
-    log.Fatal("expected", value1)
-  }
+	// ar this stage
+	// 0,7 should be [4,5,8]
+	// 0,8 [3,4,5,7]
+	// after they should be just [4,5]
+	value0 := testPuzzle.GetCel(Coord{0, 7}).Values()
+	value1 := testPuzzle.GetCel(Coord{0, 8}).Values()
+	if len(value0) != 3 {
+		log.Fatal("expected", value0)
+	}
+	if len(value1) != 4 {
+		log.Fatal("expected", value1)
+	}
+	testPuzzle.TwinSolver()
+	value0 = testPuzzle.GetCel(Coord{0, 7}).Values()
+	value1 = testPuzzle.GetCel(Coord{0, 8}).Values()
+	if len(value0) != 2 {
+		log.Fatal("expected", value0)
+	}
+	if len(value1) != 2 {
+		log.Fatal("expected", value1)
+	}
 	//log.Println(testPuzzle)
-}
-
-func TestChain0(t *testing.T) {
-	// In this we want to spot the 1->2->3->1 chain
-	// Without being tripped up by {1,5}
-	testValues := [][]int{
-		{1, 2},
-		{2, 3},
-		{1, 3},
-		{4, 5},
-		{4, 6},
-		{1, 5},
-	}
-	tv := NewChain(testValues)
-	log.Println(tv.SearchChain())
-}
-func TestChain1(t *testing.T) {
-	// In this we want to spot the 1->2->3->1 chain
-	// Without being tripped up by {1,5}
-	testValues := [][]int{
-		{1, 2},
-		{2, 3},
-		{1, 3},
-		{4, 5},
-		{4, 6},
-		{4, 5},
-	}
-	tv := NewChain(testValues)
-	log.Println(tv.SearchChain())
 }
