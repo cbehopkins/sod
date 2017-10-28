@@ -5,14 +5,17 @@ import (
 	"strconv"
 )
 
+// Value in a cell
 type Value int
 
 func (v Value) String() string {
 	return strconv.Itoa(int(v))
 }
 
+// PuzzleSize size of puzzle
 const PuzzleSize = 9
 
+// ErrUnfoundValue Error we can't find a value in the array
 var ErrUnfoundValue = errors.New("Value not found in array")
 
 // Hidden Twin(Triplet?) Processing

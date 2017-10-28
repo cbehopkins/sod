@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/cbehopkins/sod"
 	"log"
+
+	"github.com/cbehopkins/sod"
 )
 
 func main() {

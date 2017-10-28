@@ -5,46 +5,57 @@ import (
 	"log"
 )
 
+// Group coords together into managable lumps
 type Group struct {
 	crdList []Coord
 	pz      *Puzzle
 }
 
 func (gr Group) String() string {
-	ret_str := "["
+	retStr := "["
 	spacer := ""
 	for _, itm := range gr.crdList {
-		ret_str += spacer + itm.String()
+		retStr += spacer + itm.String()
 		spacer = " "
 	}
-	ret_str += "]"
-	return ret_str
+	retStr += "]"
+	return retStr
 }
+
+// Items - the items (list of coords) contained in the group
 func (gr Group) Items() []Coord {
 	return gr.crdList
 }
+
+// Len of the group
 func (gr Group) Len() int {
 	return len(gr.crdList)
 }
+
+// NewGroup return a new group
 func NewGroup(sz int, pz *Puzzle) *Group {
 	itm := new(Group)
 	itm.crdList = make([]Coord, 0, sz)
 	itm.pz = pz
 	return itm
 }
+
+// GetCel from a coord
 func (gr Group) GetCel(crd Coord) *Cell {
 	return gr.pz.GetCel(crd)
 }
-func (grp Group) valCheck(value Value) bool {
+func (gr Group) valCheck(value Value) bool {
 	// Check if a value appears in all the supplied cells
-	for _, cellCrd := range grp.Items() {
-		cel := grp.GetCel(cellCrd)
+	for _, cellCrd := range gr.Items() {
+		cel := gr.GetCel(cellCrd)
 		if cel.FindVal(value) == cel.Len() {
 			return false
 		}
 	}
 	return true
 }
+
+// SelfCheck a group for consistency
 func (gr Group) SelfCheck() error {
 	// Many rules associated with what can be in a group.
 	// let's self check to make sure we don't violate them.
@@ -52,20 +63,20 @@ func (gr Group) SelfCheck() error {
 	if pz == nil {
 		log.Fatal("Uninital,ized puzzle")
 	}
-	pz_len := pz.Len()
+	pzLen := pz.Len()
 
 	// First off for a solved cell, a number should only appear once
-	set_map := make(map[Value]struct{})
-	for i := 0; i < pz_len; i++ {
-		set_map[Value(i+1)] = struct{}{}
+	setMap := make(map[Value]struct{})
+	for i := 0; i < pzLen; i++ {
+		setMap[Value(i+1)] = struct{}{}
 	}
 	for _, crd := range gr.Items() {
 		cl := pz.GetCel(crd)
 		if cl.Len() == 1 {
 			val := cl.Val[0]
-			_, ok := set_map[val]
+			_, ok := setMap[val]
 			if ok {
-				delete(set_map, val)
+				delete(setMap, val)
 			} else {
 				return errors.New("value already deleted")
 			}
@@ -82,7 +93,7 @@ func (gr Group) SelfCheck() error {
 			for _, val := range cl.Val {
 				// For each of the possible values
 				// set map by this point has had solved values removed
-				_, ok := set_map[val]
+				_, ok := setMap[val]
 				if !ok {
 					// check it's not one that's marked as solved
 					log.Printf("Range:%v\nValue:%v\n", gr, val)
@@ -96,51 +107,51 @@ func (gr Group) SelfCheck() error {
 	return nil
 }
 
-// rmChain takes a list of chains as a job list
+// RmChain takes a list of chains as a job list
 // Each chain is one job
 // Each chain is a list of links (fake cells)
 // We operate on cells not in the list
 // Removing the values in the link from those cells not in the list
-func (gr Group) RmChain(result_ch []Chain) {
-  if len (result_ch)>0 {
-    //log.Println("Removing Chain", result_ch, gr)
-  }
+func (gr Group) RmChain(resultCh []Chain) {
+	if len(resultCh) > 0 {
+		//log.Println("Removing Chain", result_ch, gr)
+	}
 	pz := gr.pz
 	// Each chain contains a list of Links(cells)
-	for _, chain := range result_ch {
+	for _, chain := range resultCh {
 		// That share a pair of numbers.
 		// The pair in each of these can be removed from every other cell in the group
-		values_to_remove := make(map[Value]struct{})
-		coord_to_ignore := make([]Coord, 0, len(chain))
+		valuesToRemove := make(map[Value]struct{})
+		coordToIgnore := make([]Coord, 0, len(chain))
 
 		var link Cell
 		for _, link = range chain {
-			coord_to_ignore = append(coord_to_ignore, link.crd)
+			coordToIgnore = append(coordToIgnore, link.crd)
 			//log.Println("Sacred Coord",link.coord)
 			for _, val := range link.Values() {
 				v := val
 				//log.Println("Removable Val",v)
-				values_to_remove[v] = struct{}{}
+				valuesToRemove[v] = struct{}{}
 			}
 		}
-		rm_list := make([]Value, 0, len(values_to_remove))
+		rmList := make([]Value, 0, len(valuesToRemove))
 		rmFunc := func(crd Coord) bool {
-			for _, cti := range coord_to_ignore {
+			for _, cti := range coordToIgnore {
 				if cti.Eq(crd) {
-          //log.Println("Skipping cord because it is us")
+					//log.Println("Skipping cord because it is us")
 					return true
 				}
 			}
-			for va := range values_to_remove {
+			for va := range valuesToRemove {
 				if pz.ValExist(va, crd) {
-			    //log.Printf("Removing value %v, from crd %v\n", va,crd)
-					rm_list = append(rm_list, va)
+					//log.Printf("Removing value %v, from crd %v\n", va,crd)
+					rmList = append(rmList, va)
 				}
 			}
-			pz.RemoveVals(rm_list, crd)
+			pz.RemoveVals(rmList, crd)
 			//pz.RemoveVals(va, crd)
 			// Revert the slice to no items, full capacity
-			rm_list = rm_list[0:0]
+			rmList = rmList[0:0]
 			return true
 		}
 
@@ -148,12 +159,12 @@ func (gr Group) RmChain(result_ch []Chain) {
 	}
 }
 
-// This will remove the values in the links
+// RmLinks - This will remove the values in the links
 // from the coordinates the link point to
 // Does it as a batch operation for efficiency
-func (gr Group) RmLinks(result_ch []Chain) {
+func (gr Group) RmLinks(resultCh []Chain) {
 	pz := gr.pz
-	for _, chain := range result_ch {
+	for _, chain := range resultCh {
 		var link Cell
 		for _, link = range chain {
 			crd := link.crd
@@ -163,7 +174,7 @@ func (gr Group) RmLinks(result_ch []Chain) {
 	}
 }
 
-// For a group
+// ExOthers - For a group
 // Go through all the coords in the group, except the one supplied
 // and run the function
 // On that coordinate
@@ -180,6 +191,8 @@ func (gr Group) ExOthers(co Coord, todo func(Coord) bool) {
 
 	gr.ExAll(lFunc)
 }
+
+// ExAll for each coord in the group run the specified function
 func (gr Group) ExAll(todo func(Coord) bool) {
 	for _, crd := range gr.Items() {
 		// Abort processing on false
@@ -189,6 +202,7 @@ func (gr Group) ExAll(todo func(Coord) bool) {
 	}
 }
 
+// Add a coord to the group
 func (gr *Group) Add(co Coord) {
 	gr.crdList = append(gr.crdList, co)
 }

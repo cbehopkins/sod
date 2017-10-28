@@ -28,34 +28,34 @@ func TestSimplify(t *testing.T) {
 
 	// Set Value,Col,Row
 	// numbered from 0
-	testPuzzle.SetValC(3, 1, 0)
-	testPuzzle.SetValC(4, 3, 0)
-	testPuzzle.SetValC(8, 4, 0)
-	testPuzzle.SetValC(6, 6, 0)
-	testPuzzle.SetValC(9, 8, 0)
-	testPuzzle.SetValC(2, 4, 1)
-	testPuzzle.SetValC(7, 5, 1)
-	testPuzzle.SetValC(8, 0, 2)
-	testPuzzle.SetValC(3, 3, 2)
-	testPuzzle.SetValC(1, 1, 3)
-	testPuzzle.SetValC(9, 2, 3)
-	testPuzzle.SetValC(7, 0, 4)
-	testPuzzle.SetValC(8, 1, 4)
-	testPuzzle.SetValC(2, 5, 4)
-	testPuzzle.SetValC(9, 7, 4)
-	testPuzzle.SetValC(3, 8, 4)
-	testPuzzle.SetValC(4, 5, 5)
-	testPuzzle.SetValC(8, 6, 5)
-	testPuzzle.SetValC(7, 7, 5)
-	testPuzzle.SetValC(5, 5, 6)
-	testPuzzle.SetValC(6, 8, 6)
-	testPuzzle.SetValC(1, 3, 7)
-	testPuzzle.SetValC(3, 4, 7)
-	testPuzzle.SetValC(9, 0, 8)
-	testPuzzle.SetValC(2, 2, 8)
-	testPuzzle.SetValC(4, 4, 8)
-	testPuzzle.SetValC(8, 5, 8)
-	testPuzzle.SetValC(1, 7, 8)
+	testPuzzle.setValC(3, 1, 0)
+	testPuzzle.setValC(4, 3, 0)
+	testPuzzle.setValC(8, 4, 0)
+	testPuzzle.setValC(6, 6, 0)
+	testPuzzle.setValC(9, 8, 0)
+	testPuzzle.setValC(2, 4, 1)
+	testPuzzle.setValC(7, 5, 1)
+	testPuzzle.setValC(8, 0, 2)
+	testPuzzle.setValC(3, 3, 2)
+	testPuzzle.setValC(1, 1, 3)
+	testPuzzle.setValC(9, 2, 3)
+	testPuzzle.setValC(7, 0, 4)
+	testPuzzle.setValC(8, 1, 4)
+	testPuzzle.setValC(2, 5, 4)
+	testPuzzle.setValC(9, 7, 4)
+	testPuzzle.setValC(3, 8, 4)
+	testPuzzle.setValC(4, 5, 5)
+	testPuzzle.setValC(8, 6, 5)
+	testPuzzle.setValC(7, 7, 5)
+	testPuzzle.setValC(5, 5, 6)
+	testPuzzle.setValC(6, 8, 6)
+	testPuzzle.setValC(1, 3, 7)
+	testPuzzle.setValC(3, 4, 7)
+	testPuzzle.setValC(9, 0, 8)
+	testPuzzle.setValC(2, 2, 8)
+	testPuzzle.setValC(4, 4, 8)
+	testPuzzle.setValC(8, 5, 8)
+	testPuzzle.setValC(1, 7, 8)
 	//log.Println("Row 7\n",testPuzzle)
 	sc()
 
@@ -66,10 +66,10 @@ func TestSimplify(t *testing.T) {
 	if true {
 		// This is a minimal puzzle so:
 		// Give is an extra solved location
-		testPuzzle.SetValC(2, 0, 0)
+		testPuzzle.setValC(2, 0, 0)
 		difficultPuz := testPuzzle.MaxDifficulty()
 		//log.Println(difficultPuz)
-		if difficultPuz.RoughCheck(*testPuzzle) {
+		if difficultPuz.roughCheck(*testPuzzle) {
 			// all is good
 			// every solved cell in testPuzzle
 			// exists as a value in difficultPuz
@@ -80,7 +80,7 @@ func TestSimplify(t *testing.T) {
 		// if MaxDifficulty has worked
 		// there will be some cells marked as solved in testPuzzle
 		// that are not solved in difficultPuz
-		if testPuzzle.LessRoughCheck(difficultPuz) {
+		if testPuzzle.lessRoughCheck(difficultPuz) {
 			// If this is true
 			// then every solved difficultPuz cell is solved in testPuzzle
 			log.Fatal("MaxDifficulty has done nothing")
@@ -89,115 +89,115 @@ func TestSimplify(t *testing.T) {
 }
 func samplePuzzle0() (testPuzzle *Puzzle, expectedResult [][]Value) {
 	expectedResult = [][]Value{
-		[]Value{2, 3, 7, 4, 8, 1, 6, 5, 9},
-		[]Value{6, 9, 4, 5, 2, 7, 1, 3, 8},
-		[]Value{8, 5, 1, 3, 6, 9, 2, 4, 7},
-		[]Value{4, 1, 9, 8, 7, 3, 5, 6, 2},
-		[]Value{7, 8, 5, 6, 1, 2, 4, 9, 3},
-		[]Value{3, 2, 6, 9, 5, 4, 8, 7, 1},
-		[]Value{1, 4, 3, 2, 9, 5, 7, 8, 6},
-		[]Value{5, 7, 8, 1, 3, 6, 9, 2, 4},
-		[]Value{9, 6, 2, 7, 4, 8, 3, 1, 5},
+		{2, 3, 7, 4, 8, 1, 6, 5, 9},
+		{6, 9, 4, 5, 2, 7, 1, 3, 8},
+		{8, 5, 1, 3, 6, 9, 2, 4, 7},
+		{4, 1, 9, 8, 7, 3, 5, 6, 2},
+		{7, 8, 5, 6, 1, 2, 4, 9, 3},
+		{3, 2, 6, 9, 5, 4, 8, 7, 1},
+		{1, 4, 3, 2, 9, 5, 7, 8, 6},
+		{5, 7, 8, 1, 3, 6, 9, 2, 4},
+		{9, 6, 2, 7, 4, 8, 3, 1, 5},
 	}
 	//log.Println(expectedResult)
 	testPuzzle = NewPuzzle()
 	// Set Value,Col,Row
 	// numbered from 0
-	testPuzzle.SetValC(3, 1, 0)
-	testPuzzle.SetValC(4, 3, 0)
-	testPuzzle.SetValC(8, 4, 0)
-	testPuzzle.SetValC(6, 6, 0)
-	testPuzzle.SetValC(9, 8, 0)
-	testPuzzle.SetValC(2, 4, 1)
-	testPuzzle.SetValC(7, 5, 1)
-	testPuzzle.SetValC(8, 0, 2)
-	testPuzzle.SetValC(3, 3, 2)
-	testPuzzle.SetValC(1, 1, 3)
-	testPuzzle.SetValC(9, 2, 3)
-	testPuzzle.SetValC(7, 0, 4)
-	testPuzzle.SetValC(8, 1, 4)
-	testPuzzle.SetValC(2, 5, 4)
-	testPuzzle.SetValC(9, 7, 4)
-	testPuzzle.SetValC(3, 8, 4)
-	testPuzzle.SetValC(4, 5, 5)
-	testPuzzle.SetValC(8, 6, 5)
-	testPuzzle.SetValC(7, 7, 5)
-	testPuzzle.SetValC(5, 5, 6)
-	testPuzzle.SetValC(6, 8, 6)
-	testPuzzle.SetValC(1, 3, 7)
-	testPuzzle.SetValC(3, 4, 7)
-	testPuzzle.SetValC(9, 0, 8)
-	testPuzzle.SetValC(2, 2, 8)
-	testPuzzle.SetValC(4, 4, 8)
-	testPuzzle.SetValC(8, 5, 8)
-	testPuzzle.SetValC(1, 7, 8)
+	testPuzzle.setValC(3, 1, 0)
+	testPuzzle.setValC(4, 3, 0)
+	testPuzzle.setValC(8, 4, 0)
+	testPuzzle.setValC(6, 6, 0)
+	testPuzzle.setValC(9, 8, 0)
+	testPuzzle.setValC(2, 4, 1)
+	testPuzzle.setValC(7, 5, 1)
+	testPuzzle.setValC(8, 0, 2)
+	testPuzzle.setValC(3, 3, 2)
+	testPuzzle.setValC(1, 1, 3)
+	testPuzzle.setValC(9, 2, 3)
+	testPuzzle.setValC(7, 0, 4)
+	testPuzzle.setValC(8, 1, 4)
+	testPuzzle.setValC(2, 5, 4)
+	testPuzzle.setValC(9, 7, 4)
+	testPuzzle.setValC(3, 8, 4)
+	testPuzzle.setValC(4, 5, 5)
+	testPuzzle.setValC(8, 6, 5)
+	testPuzzle.setValC(7, 7, 5)
+	testPuzzle.setValC(5, 5, 6)
+	testPuzzle.setValC(6, 8, 6)
+	testPuzzle.setValC(1, 3, 7)
+	testPuzzle.setValC(3, 4, 7)
+	testPuzzle.setValC(9, 0, 8)
+	testPuzzle.setValC(2, 2, 8)
+	testPuzzle.setValC(4, 4, 8)
+	testPuzzle.setValC(8, 5, 8)
+	testPuzzle.setValC(1, 7, 8)
 	return testPuzzle, expectedResult
 }
 func samplePuzzle1() (testPuzzle *Puzzle, expectedResult [][]Value) {
 	expectedResult = [][]Value{
-		[]Value{2, 3, 7, 4, 8, 1, 6, 5, 9},
-		[]Value{6, 9, 4, 5, 2, 7, 1, 3, 8},
-		[]Value{8, 5, 1, 3, 6, 9, 2, 4, 7},
-		[]Value{4, 1, 9, 8, 7, 3, 5, 6, 2},
-		[]Value{7, 8, 5, 6, 1, 2, 4, 9, 3},
-		[]Value{3, 2, 6, 9, 5, 4, 8, 7, 1},
-		[]Value{1, 4, 3, 2, 9, 5, 7, 8, 6},
-		[]Value{5, 7, 8, 1, 3, 6, 9, 2, 4},
-		[]Value{9, 6, 2, 7, 4, 8, 3, 1, 5},
+		{2, 3, 7, 4, 8, 1, 6, 5, 9},
+		{6, 9, 4, 5, 2, 7, 1, 3, 8},
+		{8, 5, 1, 3, 6, 9, 2, 4, 7},
+		{4, 1, 9, 8, 7, 3, 5, 6, 2},
+		{7, 8, 5, 6, 1, 2, 4, 9, 3},
+		{3, 2, 6, 9, 5, 4, 8, 7, 1},
+		{1, 4, 3, 2, 9, 5, 7, 8, 6},
+		{5, 7, 8, 1, 3, 6, 9, 2, 4},
+		{9, 6, 2, 7, 4, 8, 3, 1, 5},
 	}
 	//log.Println(expectedResult)
 	testPuzzle = NewPuzzle()
 	// Let's set up some twins for examination
-	testPuzzle.SetValC(5, 3, 0)
-	testPuzzle.SetValC(3, 5, 0)
-	testPuzzle.SetValC(9, 7, 0)
+	testPuzzle.setValC(5, 3, 0)
+	testPuzzle.setValC(3, 5, 0)
+	testPuzzle.setValC(9, 7, 0)
 	// row 1
-	testPuzzle.SetValC(6, 4, 1)
-	testPuzzle.SetValC(7, 5, 1)
-	testPuzzle.SetValC(1, 6, 1)
-	testPuzzle.SetValC(5, 7, 1)
+	testPuzzle.setValC(6, 4, 1)
+	testPuzzle.setValC(7, 5, 1)
+	testPuzzle.setValC(1, 6, 1)
+	testPuzzle.setValC(5, 7, 1)
 	// row 2
-	testPuzzle.SetValC(5, 1, 2)
-	testPuzzle.SetValC(4, 2, 2)
-	testPuzzle.SetValC(9, 3, 2)
-	testPuzzle.SetValC(2, 4, 2)
-	testPuzzle.SetValC(1, 5, 2)
-	testPuzzle.SetValC(3, 7, 2)
+	testPuzzle.setValC(5, 1, 2)
+	testPuzzle.setValC(4, 2, 2)
+	testPuzzle.setValC(9, 3, 2)
+	testPuzzle.setValC(2, 4, 2)
+	testPuzzle.setValC(1, 5, 2)
+	testPuzzle.setValC(3, 7, 2)
 	// row 3
-	testPuzzle.SetValC(4, 1, 3)
-	testPuzzle.SetValC(9, 2, 3)
-	testPuzzle.SetValC(3, 3, 3)
-	testPuzzle.SetValC(7, 4, 3)
-	testPuzzle.SetValC(2, 6, 3)
+	testPuzzle.setValC(4, 1, 3)
+	testPuzzle.setValC(9, 2, 3)
+	testPuzzle.setValC(3, 3, 3)
+	testPuzzle.setValC(7, 4, 3)
+	testPuzzle.setValC(2, 6, 3)
 	// row 4
-	testPuzzle.SetValC(1, 0, 4)
-	testPuzzle.SetValC(3, 1, 4)
-	testPuzzle.SetValC(7, 7, 4)
-	testPuzzle.SetValC(9, 8, 4)
+	testPuzzle.setValC(1, 0, 4)
+	testPuzzle.setValC(3, 1, 4)
+	testPuzzle.setValC(7, 7, 4)
+	testPuzzle.setValC(9, 8, 4)
 	// row 5
-	testPuzzle.SetValC(7, 1, 5)
-	testPuzzle.SetValC(5, 2, 5)
-	testPuzzle.SetValC(1, 4, 5)
-	testPuzzle.SetValC(9, 5, 5)
-	testPuzzle.SetValC(4, 6, 5)
-	testPuzzle.SetValC(3, 8, 5)
+	testPuzzle.setValC(7, 1, 5)
+	testPuzzle.setValC(5, 2, 5)
+	testPuzzle.setValC(1, 4, 5)
+	testPuzzle.setValC(9, 5, 5)
+	testPuzzle.setValC(4, 6, 5)
+	testPuzzle.setValC(3, 8, 5)
 	// row 6
-	testPuzzle.SetValC(6, 3, 6)
-	testPuzzle.SetValC(5, 4, 6)
-	testPuzzle.SetValC(4, 5, 6)
-	testPuzzle.SetValC(3, 6, 6)
-	testPuzzle.SetValC(2, 7, 6)
+	testPuzzle.setValC(6, 3, 6)
+	testPuzzle.setValC(5, 4, 6)
+	testPuzzle.setValC(4, 5, 6)
+	testPuzzle.setValC(3, 6, 6)
+	testPuzzle.setValC(2, 7, 6)
 	// row 7
-	testPuzzle.SetValC(6, 1, 7)
-	testPuzzle.SetValC(7, 3, 7)
-	testPuzzle.SetValC(3, 4, 7)
-	testPuzzle.SetValC(2, 5, 7)
-	testPuzzle.SetValC(9, 6, 7)
+	testPuzzle.setValC(6, 1, 7)
+	testPuzzle.setValC(7, 3, 7)
+	testPuzzle.setValC(3, 4, 7)
+	testPuzzle.setValC(2, 5, 7)
+	testPuzzle.setValC(9, 6, 7)
 	// row 8
-	testPuzzle.SetValC(2, 1, 8)
-	testPuzzle.SetValC(1, 3, 8)
-	testPuzzle.SetValC(9, 4, 8)
-	testPuzzle.SetValC(8, 5, 8)
+	testPuzzle.setValC(2, 1, 8)
+	testPuzzle.setValC(1, 3, 8)
+	testPuzzle.setValC(9, 4, 8)
+	testPuzzle.setValC(8, 5, 8)
 	return testPuzzle, expectedResult
 }
 func samplePuzzle2() (testPuzzle *Puzzle, expectedResult [][]Value) {
@@ -206,46 +206,46 @@ func samplePuzzle2() (testPuzzle *Puzzle, expectedResult [][]Value) {
 	testPuzzle = NewPuzzle()
 
 	// Let's set up some twins for examination
-	testPuzzle.SetValC(6, 0, 0)
-	testPuzzle.SetValC(2, 4, 0)
-	testPuzzle.SetValC(9, 8, 0)
+	testPuzzle.setValC(6, 0, 0)
+	testPuzzle.setValC(2, 4, 0)
+	testPuzzle.setValC(9, 8, 0)
 	// row 1
-	testPuzzle.SetValC(1, 1, 1)
-	testPuzzle.SetValC(3, 3, 1)
-	testPuzzle.SetValC(7, 5, 1)
-	testPuzzle.SetValC(5, 7, 1)
+	testPuzzle.setValC(1, 1, 1)
+	testPuzzle.setValC(3, 3, 1)
+	testPuzzle.setValC(7, 5, 1)
+	testPuzzle.setValC(5, 7, 1)
 	// row 2
-	testPuzzle.SetValC(3, 2, 2)
-	testPuzzle.SetValC(1, 6, 2)
+	testPuzzle.setValC(3, 2, 2)
+	testPuzzle.setValC(1, 6, 2)
 	// row 3
-	testPuzzle.SetValC(9, 1, 3)
-	testPuzzle.SetValC(2, 7, 3)
+	testPuzzle.setValC(9, 1, 3)
+	testPuzzle.setValC(2, 7, 3)
 
 	// row 4
-	testPuzzle.SetValC(2, 0, 4)
-	testPuzzle.SetValC(8, 3, 4)
-	testPuzzle.SetValC(7, 4, 4)
-	testPuzzle.SetValC(5, 5, 4)
-	testPuzzle.SetValC(3, 8, 4)
+	testPuzzle.setValC(2, 0, 4)
+	testPuzzle.setValC(8, 3, 4)
+	testPuzzle.setValC(7, 4, 4)
+	testPuzzle.setValC(5, 5, 4)
+	testPuzzle.setValC(3, 8, 4)
 	// row 5
-	testPuzzle.SetValC(5, 2, 5)
-	testPuzzle.SetValC(1, 4, 5)
-	testPuzzle.SetValC(4, 6, 5)
+	testPuzzle.setValC(5, 2, 5)
+	testPuzzle.setValC(1, 4, 5)
+	testPuzzle.setValC(4, 6, 5)
 
 	// row 6
-	testPuzzle.SetValC(7, 1, 6)
-	testPuzzle.SetValC(8, 4, 6)
-	testPuzzle.SetValC(9, 7, 6)
+	testPuzzle.setValC(7, 1, 6)
+	testPuzzle.setValC(8, 4, 6)
+	testPuzzle.setValC(9, 7, 6)
 
 	// row 7
-	testPuzzle.SetValC(1, 2, 7)
-	testPuzzle.SetValC(4, 4, 7)
-	testPuzzle.SetValC(8, 6, 7)
+	testPuzzle.setValC(1, 2, 7)
+	testPuzzle.setValC(4, 4, 7)
+	testPuzzle.setValC(8, 6, 7)
 
 	// row 8
-	testPuzzle.SetValC(2, 3, 8)
-	testPuzzle.SetValC(5, 4, 8)
-	testPuzzle.SetValC(9, 5, 8)
+	testPuzzle.setValC(2, 3, 8)
+	testPuzzle.setValC(5, 4, 8)
+	testPuzzle.setValC(9, 5, 8)
 	return testPuzzle, expectedResult
 }
 func TestSolver(t *testing.T) {
@@ -294,16 +294,16 @@ func TestDuplicate(t *testing.T) {
 	}
 	duplicatePuz.ExAll(clearFunc)
 	// TBD check duplicate is all 1s
-	pz_size := testPuzzle.Len()
-	expected_duplicate := make([][]Value, pz_size)
-	for i := 0; i < pz_size; i++ {
-		tmp_arr := make([]Value, pz_size)
-		for j := 0; j < pz_size; j++ {
-			tmp_arr[j] = 1
+	pzSize := testPuzzle.Len()
+	expectedDuplicate := make([][]Value, pzSize)
+	for i := 0; i < pzSize; i++ {
+		tmpArr := make([]Value, pzSize)
+		for j := 0; j < pzSize; j++ {
+			tmpArr[j] = 1
 		}
-		expected_duplicate[i] = tmp_arr
+		expectedDuplicate[i] = tmpArr
 	}
-	if !duplicatePuz.Check(expected_duplicate) {
+	if !duplicatePuz.Check(expectedDuplicate) {
 		log.Fatal("Unexpected Result should be all 1s", duplicatePuz)
 	}
 

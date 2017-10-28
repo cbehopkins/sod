@@ -1,17 +1,20 @@
 package sod
 
+// Cell is a single cell of a puzzle
 type Cell struct {
 	Val []Value
 	pz  *Puzzle
 	crd Coord
 }
 
+// NewBlankCell returns an empty cell
 func NewBlankCell(size int) *Cell {
 	itm := new(Cell)
 	itm.Val = make([]Value, size)
 	return itm
 }
 
+// NewCell created within a puzzle
 func (pz *Puzzle) NewCell(crd Coord) *Cell {
 	size := pz.Len()
 	itm := new(Cell)
@@ -20,6 +23,8 @@ func (pz *Puzzle) NewCell(crd Coord) *Cell {
 	itm.Val = make([]Value, size)
 	return itm
 }
+
+// NewCellValues setup the values for a cell
 func NewCellValues(vals []Value) *Cell {
 	itm := NewBlankCell(len(vals))
 	for i, vl := range vals {
@@ -28,22 +33,26 @@ func NewCellValues(vals []Value) *Cell {
 	return itm
 }
 func (cl Cell) String() string {
-	ret_str := "["
+	retStr := "["
 	csl := ""
 	for _, v := range cl.Values() {
-		ret_str += csl + v.String()
+		retStr += csl + v.String()
 		csl = ","
 	}
-	ret_str += "]"
-	return ret_str
+	retStr += "]"
+	return retStr
 }
+
+// Values returns the array of values in the cell
 func (cl Cell) Values() []Value {
 	return cl.Val
 }
-func (src Cell) Copy(dst *Cell) {
-	dst.pz = src.pz
-	dst.crd = src.crd
-	len := copy(dst.Val, src.Val)
+
+// Copy one cell to another
+func (cl Cell) Copy(dst *Cell) {
+	dst.pz = cl.pz
+	dst.crd = cl.crd
+	len := copy(dst.Val, cl.Val)
 	// Trunkate the current cell as needed
 	dst.Val = dst.Val[:len]
 }
@@ -55,18 +64,24 @@ func containsValue(val Value, values []Value) bool {
 	}
 	return false
 }
+
+// NotValues - que?
 func (cl Cell) NotValues(nv []Value) []Value {
-	ret_arr := make([]Value, 0, cl.Len())
+	retArr := make([]Value, 0, cl.Len())
 	for _, val := range cl.Values() {
 		if !containsValue(val, nv) {
-			ret_arr = append(ret_arr, val)
+			retArr = append(retArr, val)
 		}
 	}
-	return ret_arr
+	return retArr
 }
+
+// Exist returns true of a value exists
 func (cl Cell) Exist(val Value) bool {
 	return cl.FindVal(val) < len(cl.Val)
 }
+
+// FindVal find out if a value exists in the cell
 func (cl Cell) FindVal(val Value) int {
 	// This could be optimised by assumption
 	// that values will be sorted
@@ -80,9 +95,12 @@ func (cl Cell) FindVal(val Value) int {
 	return len(cl.Val)
 }
 
+// Len of the cell
 func (cl Cell) Len() int {
 	return len(cl.Val)
 }
+
+// RemoveVals from a cell
 func (cl *Cell) RemoveVals(vals []Value) error {
 	// TBD make this more efficient
 	for _, val := range vals {
@@ -93,6 +111,8 @@ func (cl *Cell) RemoveVals(vals []Value) error {
 	}
 	return nil
 }
+
+// RemoveVal - remove a single value from a cell
 func (cl *Cell) RemoveVal(val Value) error {
 	// Remove a possible value from the cell
 	// without creating a new array
@@ -107,15 +127,17 @@ func (cl *Cell) RemoveVal(val Value) error {
 	cl.Val = cl.Val[:cllen-1]
 	return nil
 }
+
+// SetVal - set a cell to ve a single value
 func (cl *Cell) SetVal(val Value) {
 	cl.Val = []Value{val}
 }
-func (ln Cell) others(val Value) []Value {
-	ret_val := make([]Value, 0)
-	for _, vl := range ln.Values() {
+func (cl Cell) others(val Value) []Value {
+	retVal := make([]Value, 0)
+	for _, vl := range cl.Values() {
 		if vl != val {
-			ret_val = append(ret_val, vl)
+			retVal = append(retVal, vl)
 		}
 	}
-	return ret_val
+	return retVal
 }

@@ -2,19 +2,23 @@ package sod
 
 import "log"
 
+// Chain is a series of cells we have strung together
 type Chain []Cell
 
+// NewChain is a new chain
 func NewChain(input [][]int) *Chain {
-	ret_val := make(Chain, len(input))
+	retVal := make(Chain, len(input))
 	for i := 0; i < len(input); i++ {
 		tmpLink := NewBlankCell(len(input[i]))
 		for j := 0; j < tmpLink.Len(); j++ {
 			tmpLink.Val[j] = Value(input[i][j])
 		}
-		ret_val[i] = *tmpLink
+		retVal[i] = *tmpLink
 	}
-	return &ret_val
+	return &retVal
 }
+
+// Add a cell to the chain
 func (ch *Chain) Add(input Cell) {
 	*ch = append(*ch, input)
 }
@@ -25,7 +29,7 @@ func (ch Chain) searchLink(startOffset, offset int, start, target Value, maxDept
 		return []Cell{}
 	}
 	//log.Printf("Searching for %v, at offset %v, Depth %v", target, offset, maxDepth)
-	for i, _ := range ch {
+	for i := range ch {
 		off := (i + offset)
 		if off >= len(ch) {
 			return []Cell{}
@@ -50,17 +54,17 @@ func (ch Chain) searchLink(startOffset, offset int, start, target Value, maxDept
 			tmp := ch.searchLink(startOffset, off+1, start, othr[0], maxDepth-1)
 			if len(tmp) > 0 {
 				return append(tmp, link)
-			} else {
-				return []Cell{}
 			}
-
+			return []Cell{}
 		}
 	}
 	//log.Println("Run out of search, giving up")
 	return []Cell{}
 }
+
+// SearchChain - Search the Chain for patterns
 func (ch Chain) SearchChain() []Chain {
-	ret_list := make([]Chain, 0)
+	retList := make([]Chain, 0)
 	maxDepth := 9
 	for offset, link := range ch {
 		startVl := link.Val[0]
@@ -70,8 +74,8 @@ func (ch Chain) SearchChain() []Chain {
 		if len(resultList) > 0 {
 			resultList = append(resultList, link)
 			//log.Println("****************Success:", resultList)
-			ret_list = append(ret_list, resultList)
+			retList = append(retList, resultList)
 		}
 	}
-	return ret_list
+	return retList
 }

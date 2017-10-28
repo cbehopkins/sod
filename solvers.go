@@ -1,13 +1,12 @@
 package sod
 
 import (
-	"errors"
 	"log"
 	"math/rand"
-	"strconv"
 	"sync"
 )
 
+// SolveAll run all algos and solve
 func (pz Puzzle) SolveAll() error {
 
 	pz.Solve()
@@ -38,6 +37,8 @@ func (pz Puzzle) SolveAll() error {
 	return nil
 
 }
+
+// Solve with the quick solvers
 func (pz Puzzle) Solve() {
 	//	outerRun := true
 	//	for outerRun {
@@ -53,12 +54,13 @@ func (pz Puzzle) Solve() {
 	//}
 }
 
+// GroupEliminate for a group eliminate what we can
 // For a given candidate look at each value in the candidate
 // Then see if this value appears in any of the group cells
 // If it does not then that is the only cell it can appear in
 // we can therefore run a set on that candiddate cell
 // to that value
-func (pz Puzzle) GroupEliminate(candidate Coord) (value_modified bool) {
+func (pz Puzzle) GroupEliminate(candidate Coord) (valueModified bool) {
 	//log.Println("GroupEliminate called on", candidate)
 	// Candidate must not exist in group
 	// To make other code easier, don't error, just move on
@@ -67,7 +69,7 @@ func (pz Puzzle) GroupEliminate(candidate Coord) (value_modified bool) {
 		return false
 	}
 
-	allGroups := pz.AllGroupSets()
+	allGroups := pz.allGroupSets()
 
 	for _, currentPossible := range pz.GetCel(candidate).Values() {
 		//log.Println("Checking if value is in another cell", currentPossible)
@@ -103,7 +105,7 @@ func (pz Puzzle) GroupEliminate(candidate Coord) (value_modified bool) {
 			} else {
 				pz.SetVal(currentPossible, candidate)
 				pz.IncreaseDifficuly()
-				value_modified = true
+				valueModified = true
 				//log.Println("Setting value, because it does not appear elsewhere in group", currentPossible, candidate, badValue)
 				//log.Println(gr)
 			}
@@ -115,16 +117,17 @@ func (pz Puzzle) GroupEliminate(candidate Coord) (value_modified bool) {
 	return
 }
 
+// LoneItems work on a single group
 // Look through a group and see if a number only appears in one cell of the group.
 // If so then that must be the value for that Cell
-func (pz Puzzle) LoneItems() (value_modified bool) {
-	puz_size := pz.Len()
-	var check_map map[Value]Coord
+func (pz Puzzle) LoneItems() (valueModified bool) {
+	puzSize := pz.Len()
+	var checkMap map[Value]Coord
 
 	mapInit := func() {
-		check_map = make(map[Value]Coord)
-		for i := 0; i < puz_size; i++ {
-			check_map[Value(i)] = nil
+		checkMap = make(map[Value]Coord)
+		for i := 0; i < puzSize; i++ {
+			checkMap[Value(i)] = nil
 		}
 	}
 	// If the value existsin only 1 co-ord then we've found it
@@ -132,14 +135,14 @@ func (pz Puzzle) LoneItems() (value_modified bool) {
 		cell := pz.GetCel(crd)
 		values := cell.Values()
 		for _, v := range values {
-			tmp, ok := check_map[v]
+			tmp, ok := checkMap[v]
 			if ok {
 				if tmp == nil {
 					// This is the first find
-					check_map[v] = crd
+					checkMap[v] = crd
 				} else {
 					// This is the second time we've found the value
-					delete(check_map, v)
+					delete(checkMap, v)
 				}
 			}
 		}
@@ -148,47 +151,21 @@ func (pz Puzzle) LoneItems() (value_modified bool) {
 	mastFunc := func(gr Group) bool {
 		mapInit()
 		gr.ExAll(coordFunc)
-		for value, coordinate := range check_map {
+		for value, coordinate := range checkMap {
 			if coordinate != nil && (pz.GetCel(coordinate).Len() > 1) {
 				//log.Printf("For group %v\n%v only occurs in %v\n", gr, value, coordinate)
 				pz.SetVal(value, coordinate)
 				pz.IncreaseDifficuly()
-				value_modified = true
+				valueModified = true
 			}
 		}
 		return true
 	}
-	allGroups := pz.AllGroupSets()
+	allGroups := pz.allGroupSets()
 	allGroups.ExAll(mastFunc)
 	return
 }
 
-type CrdCnt struct {
-	Cnt     int
-	LocList *Group
-}
-
-func (cc CrdCnt) String() string {
-	ret_str := "CrdCnt[\n"
-	ret_str += "Cnt:" + strconv.Itoa(cc.Cnt+1) + ","
-	ret_str += cc.LocList.String()
-	ret_str += "\n]"
-	return ret_str
-}
-func NewCrdCnt(crd Coord, pz *Puzzle) *CrdCnt {
-	itm := new(CrdCnt)
-	itm.Cnt = 0
-	itm.LocList = NewGroup(1, pz)
-	itm.set(crd)
-	return itm
-}
-func (cc *CrdCnt) set(crd Coord) {
-	cc.LocList.Add(crd)
-}
-func (cc *CrdCnt) Add(crd Coord) {
-	cc.Cnt++
-	cc.set(crd)
-}
 func (pz *Puzzle) cntMapFunc(crd Coord, cell *Cell, values []Value, cntMap map[int]*CrdCnt) {
 
 	// Populating a map from count of items in cells to list
@@ -225,7 +202,7 @@ func (pz *Puzzle) buildMaps(crd Coord, cntMap map[int]*CrdCnt, valMap map[Value]
 }
 
 // For one co-ord Count , make a chain of loops
-func (pz *Puzzle) mkChain(input *CrdCnt) (result_ch []Chain) {
+func (pz *Puzzle) mkChain(input *CrdCnt) (resultCh []Chain) {
 	chain := make(Chain, 0)
 	for _, crd := range input.LocList.Items() {
 		cel := pz.GetCel(crd)
@@ -233,20 +210,20 @@ func (pz *Puzzle) mkChain(input *CrdCnt) (result_ch []Chain) {
 		nl.crd = crd
 		chain = append(chain, *nl)
 	}
-	result_ch = chain.SearchChain()
-	return result_ch
+	resultCh = chain.SearchChain()
+	return resultCh
 }
-func (pz *Puzzle) cntExamine(cm map[int]*CrdCnt) (result_ch, del_ch []Chain) {
+func (pz *Puzzle) cntExamine(cm map[int]*CrdCnt) (resultCh, delCh []Chain) {
 	// Look at the cells that have 2 items in them
 	// Is there another cell that has the same paiting
 	// So called Naked Twins
-	result_ch = make([]Chain, 0)
-	del_ch = make([]Chain, 0)
+	resultCh = make([]Chain, 0)
+	delCh = make([]Chain, 0)
 
 	val, ok := cm[2]
 	if ok {
 		//log.Println("These are two entry cells", val)
-		result_ch = pz.mkChain(val)
+		resultCh = pz.mkChain(val)
 		//if len(result_ch)>0 {log.Println("Rx things to delete", result_ch)}
 	}
 	return
@@ -265,10 +242,10 @@ func (pz *Puzzle) valGrind(value Value, cells Group, vm map[Value]*CrdCnt) bool 
 					// If the value appears in all the cells we appear in
 					// Then we have a match
 					// Build a list of values that are not val,value
-					rem_vals := cel.NotValues([]Value{val, value})
+					remVals := cel.NotValues([]Value{val, value})
 
-					if len(rem_vals) > 0 {
-						cel.RemoveVals(rem_vals)
+					if len(remVals) > 0 {
+						cel.RemoveVals(remVals)
 						modified = true
 						//log.Printf("%v is paired with %v: Remove %v\n", val, value, rem_vals)
 					}
@@ -315,9 +292,9 @@ func (pz *Puzzle) twinWorkGroup(gr Group) bool {
 	}
 	gr.ExAll(lCoordFunc)
 	// Now examine the maps
-	rm_chain, _ := pz.cntExamine(cntMap)
-	if len(rm_chain) > 0 {
-		gr.RmChain(rm_chain)
+	rmChain, _ := pz.cntExamine(cntMap)
+	if len(rmChain) > 0 {
+		gr.RmChain(rmChain)
 		modified = true
 	}
 
@@ -326,11 +303,12 @@ func (pz *Puzzle) twinWorkGroup(gr Group) bool {
 	return modified || tmpMod
 
 }
-func (pz *Puzzle) TwinSolver() (modified bool) {
-	// For all the twin processing stuff we want:
-	// * The coordinates of cells with 2(,3,4) etc items in them
-	// * A count of how many times each number appears (and which cells this is)
 
+// TwinSolver solve by looking for twins
+// For all the twin processing stuff we want:
+// * The coordinates of cells with 2(,3,4) etc items in them
+// * A count of how many times each number appears (and which cells this is)
+func (pz *Puzzle) TwinSolver() (modified bool) {
 	mastFunc := func(gr Group) bool {
 		tmpMod := pz.twinWorkGroup(gr)
 		modified = modified || tmpMod
@@ -340,29 +318,13 @@ func (pz *Puzzle) TwinSolver() (modified bool) {
 	return modified
 }
 
-type runCount struct {
-	sync.Mutex
-	cnt int
-}
-
-var ErrMaxSolves = errors.New("max solvers have been run")
-
-func (rc *runCount) Grab() error {
-	rc.Lock()
-	defer rc.Unlock()
-	if rc.cnt > 0 {
-		rc.cnt--
-		return nil
-	} else {
-		return ErrMaxSolves
-	}
-}
+// TrySolver try solving by trying things
 func (pz Puzzle) TrySolver() error {
 	var maxSolvers runCount
 	maxSolvers.cnt = 10
-	return pz.ExperimentalSolver(&maxSolvers)
+	return pz.experimentalSolver(&maxSolvers)
 }
-func (pz Puzzle) ExperimentalSolver(rc *runCount) error {
+func (pz Puzzle) experimentalSolver(rc *runCount) error {
 
 	res := pz.SelfCheck()
 	if res != nil {
@@ -378,7 +340,7 @@ func (pz Puzzle) ExperimentalSolver(rc *runCount) error {
 		return res
 	}
 
-	err := rc.Grab()
+	err := rc.grab()
 	if err != nil {
 		//log.Println(err)
 		return err
@@ -387,48 +349,48 @@ func (pz Puzzle) ExperimentalSolver(rc *runCount) error {
 	cellFunc := func(crd Coord) bool {
 		cell := pz.GetCel(crd)
 		// Find a cell that has multiple possibilities
-		num_needed := cell.Len()
-		if num_needed > 1 {
+		numNeeded := cell.Len()
+		if numNeeded > 1 {
 
-			solutions_grid := make([]Puzzle, num_needed)
-			for i, _ := range solutions_grid {
+			solutionsGrid := make([]Puzzle, numNeeded)
+			for i := range solutionsGrid {
 				// Take a copy of the src puzzle
 
-				solutions_grid[i] = pz.Duplicate()
+				solutionsGrid[i] = pz.Duplicate()
 			}
-			good_solutions_found := 0
-			solution_found := 0
+			goodSolutionsFound := 0
+			solutionFound := 0
 			// For each possible value
 			for i, possibleValue := range cell.Val {
 				// Set this cell in that copy
-				solutions_grid[i].SetVal(possibleValue, crd)
+				solutionsGrid[i].SetVal(possibleValue, crd)
 
 				// So we may have a solution here
 				// Recursively solve as needed
 				// Call ourselves as we check if solved before running
-				err := solutions_grid[i].ExperimentalSolver(rc)
+				err := solutionsGrid[i].experimentalSolver(rc)
 				if err == nil {
 					// This means we have a good solution
-					good_solutions_found++
-					solution_found = i
-				} else if err == ErrMaxSolves {
+					goodSolutionsFound++
+					solutionFound = i
+				} else if err == errMaxSolves {
 					// We cannot know if we have a good solution
 					return false
 				} else {
 					// Something went wrong
 					// This is not a possible solution
-					solutions_grid[i] = Puzzle{}
+					solutionsGrid[i] = Puzzle{}
 				}
 			}
-			if good_solutions_found == 0 {
+			if goodSolutionsFound == 0 {
 				// keep looking for more solutions
 				return true
-			} else if good_solutions_found == 1 {
+			} else if goodSolutionsFound == 1 {
 				// If after this thereis only one valid solution
 				// We have a winner
 				// Find it
 				// replace the source with the solution found
-				solutions_grid[solution_found].Copy(pz)
+				solutionsGrid[solutionFound].Copy(pz)
 				pz.AddDifficulty(len(cell.Val))
 				// Stop the cell itterator
 				return false
@@ -453,16 +415,15 @@ func (pz Puzzle) ExperimentalSolver(rc *runCount) error {
 	res = pz.Solved()
 	if res == nil {
 		return nil
-	} else {
-		return res
 	}
+	return res
 }
 
-// This tries to create the maximum difficulty of puzzle possible
+// MaxDifficultyRand tries to create the maximum difficulty of puzzle possible
 // Currently does so randomly
-func (src Puzzle) MaxDifficultyRand() (dst Puzzle) {
+func (pz Puzzle) MaxDifficultyRand() (dst Puzzle) {
 
-	puz_len := src.Len()
+	puzLen := pz.Len()
 	dst = *NewPuzzle()
 	rndSrc := make(chan int)
 	rndSrcCloser := make(chan struct{})
@@ -477,8 +438,8 @@ func (src Puzzle) MaxDifficultyRand() (dst Puzzle) {
 				}
 
 			default:
-				rnd_value := r.Intn(puz_len)
-				rndSrc <- rnd_value
+				rndValue := r.Intn(puzLen)
+				rndSrc <- rndValue
 			}
 		}
 
@@ -489,22 +450,22 @@ func (src Puzzle) MaxDifficultyRand() (dst Puzzle) {
 		col := <-rndSrc
 		row := <-rndSrc
 		coord := Coord{col, row}
-		src_cell := src.GetCel(coord)
-		if src_cell.Len() != 1 {
+		srcCell := pz.GetCel(coord)
+		if srcCell.Len() != 1 {
 			continue
 		}
 
-		dst_cel := dst.GetCel(coord)
+		dstCel := dst.GetCel(coord)
 		// No point working on an already solved cell
-		if dst_cel.Len() == 1 {
+		if dstCel.Len() == 1 {
 			continue
 		}
 		// Set the value
-		dst.SetVal(src_cell.Val[0], coord)
+		dst.SetVal(srcCell.Val[0], coord)
 		// Test solving it on a copy
-		dst_poss := dst.Duplicate()
-		log.Println("Trying with puzzle", dst_poss)
-		if dst_poss.TrySolver() == nil {
+		dstPoss := dst.Duplicate()
+		log.Println("Trying with puzzle", dstPoss)
+		if dstPoss.TrySolver() == nil {
 			// This is a solvable puzzle
 			Solved = true
 		}
@@ -514,31 +475,33 @@ func (src Puzzle) MaxDifficultyRand() (dst Puzzle) {
 	<-rndSrc
 	return
 }
-func (src Puzzle) MaxDifficulty() (dst Puzzle) {
 
-	puz_len := src.Len()
+// MaxDifficulty returns a puzzle that should be the maximum possible difficulty
+func (pz Puzzle) MaxDifficulty() (dst Puzzle) {
+
+	puzLen := pz.Len()
 	puzzlesToRun := make([]*Puzzle, 0)
 	possibleReductions := make(map[int]*Puzzle)
 
-	for col := 0; col < puz_len; col++ {
-		for row := 0; row < puz_len; row++ {
+	for col := 0; col < puzLen; col++ {
+		for row := 0; row < puzLen; row++ {
 			coord := Coord{col, row}
 			// Pick a solved cell from the source puzzle
-			if src.GetCel(coord).Len() == 1 {
+			if pz.GetCel(coord).Len() == 1 {
 				possPuz := NewPuzzle()
 
 				//log.Println("This is a possible removal", coord)
 				copySolved := func(crd Coord) bool {
 					if !crd.Eq(coord) {
-						src_cell := src.GetCel(crd)
-						if src_cell.Len() == 1 {
-							possPuz.SetVal(src_cell.Val[0], crd)
+						srcCell := pz.GetCel(crd)
+						if srcCell.Len() == 1 {
+							possPuz.SetVal(srcCell.Val[0], crd)
 						}
 					}
 					return true
 				}
 
-				*possPuz.difficulty = *src.difficulty
+				*possPuz.difficulty = *pz.difficulty
 				possPuz.ExAll(copySolved)
 
 				puzzlesToRun = append(puzzlesToRun, possPuz)
@@ -573,7 +536,7 @@ func (src Puzzle) MaxDifficulty() (dst Puzzle) {
 	wgMap.Wait()
 
 	maxDifficultyFound := 0
-	for diffi, _ := range possibleReductions {
+	for diffi := range possibleReductions {
 		if diffi > maxDifficultyFound {
 			maxDifficultyFound = diffi
 		}
@@ -582,7 +545,7 @@ func (src Puzzle) MaxDifficulty() (dst Puzzle) {
 	puz, ok := possibleReductions[maxDifficultyFound]
 	if !ok {
 		log.Println("No reduction found")
-		dst = src
+		dst = pz
 	} else {
 		if puz == nil {
 			log.Fatal("Nill puzzle in reduction")

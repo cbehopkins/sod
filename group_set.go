@@ -2,8 +2,10 @@ package sod
 
 import "log"
 
+// GroupSet is a collection of groups
 type GroupSet []Group
 
+// ExAll execute a function on everything in the group
 func (gs GroupSet) ExAll(todo func(Group) bool) {
 	for _, gr := range gs {
 		if gr.pz == nil {
@@ -15,7 +17,7 @@ func (gs GroupSet) ExAll(todo func(Group) bool) {
 	}
 }
 
-// execute on everything in the groupset except
+// ExOthers execute on everything in the groupset except
 // the coordinate supplied
 func (gs GroupSet) ExOthers(co Coord, todo func(Coord) bool) {
 	lFunc := func(crd Coord) bool {

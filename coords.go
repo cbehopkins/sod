@@ -5,36 +5,34 @@ import (
 	"strconv"
 )
 
+// Coord implements a coordinate structure
 // Coordinate specified as {x,y}
 // Or {col,row}
 type Coord []int
 
 func (cr Coord) String() string {
-	ret_str := "["
-	//spacer := ""
-	//for _, v := range cr {
-	//	ret_str += spacer + strconv.Itoa(v)
-	//	spacer = " "
-	//}
+	retStr := "["
 	if len(cr) != 2 {
 		log.Fatal("Coord incorrect length")
 	}
-	ret_str += "x=" + strconv.Itoa(cr.GetColumn()) + " "
-	ret_str += "y=" + strconv.Itoa(cr.GetRow())
-	ret_str += "]"
-	return ret_str
+	retStr += "x=" + strconv.Itoa(cr.getColumn()) + " "
+	retStr += "y=" + strconv.Itoa(cr.getRow())
+	retStr += "]"
+	return retStr
 }
-func (cr Coord) GetRow() int {
+func (cr Coord) getRow() int {
 	return cr[1]
 }
-func (cr Coord) GetColumn() int {
+func (cr Coord) getColumn() int {
 	return cr[0]
 }
+
+// Eq returns true if two coords are equal
 func (cr Coord) Eq(cs Coord) bool {
-	if cr.GetRow() != cs.GetRow() {
+	if cr.getRow() != cs.getRow() {
 		return false
 	}
-	if cr.GetColumn() != cs.GetColumn() {
+	if cr.getColumn() != cs.getColumn() {
 		return false
 	}
 	return true
