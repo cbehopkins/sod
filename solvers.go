@@ -46,9 +46,11 @@ func (pz Puzzle) Solve() {
 	for run {
 		run = false
 		for _, candidate := range pz.Coords() {
-			run = run || pz.GroupEliminate(candidate)
+      rt := pz.GroupEliminate(candidate)
+      run = run || rt
 		}
-		run = run || pz.LoneItems()
+    rt := pz.LoneItems()
+		run = run || rt
 	}
 	pz.TwinSolver()
 	//}
