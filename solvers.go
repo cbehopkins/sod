@@ -22,7 +22,10 @@ func (pz Puzzle) SolveAll() error {
 
 	log.Println("Trying complex solver")
 	// This keeps experimenting until solved - very slow!
-	pz.TrySolver()
+	err := pz.TrySolver()
+	if err != nil {
+		return err
+	}
 	res = pz.Solved()
 
 	if res == ErrZeroCell {
@@ -40,20 +43,33 @@ func (pz Puzzle) SolveAll() error {
 
 // Solve with the quick solvers
 func (pz Puzzle) Solve() {
-	//	outerRun := true
-	//	for outerRun {
 	run := true
 	for run {
 		run = false
 		for _, candidate := range pz.Coords() {
-      rt := pz.GroupEliminate(candidate)
-      run = run || rt
+			rt := pz.GroupEliminate(candidate)
+			run = run || rt
 		}
-    rt := pz.LoneItems()
+		rt := pz.LoneItems()
 		run = run || rt
 	}
 	pz.TwinSolver()
-	//}
+}
+
+// masterCoord represents the master coord function
+// for a supplied coordinate
+// go through the values in the cell and return true if
+// the possible isn't in there
+func (pz Puzzle) masterCoord(crd Coord, currentPossible Value) bool {
+	cell := pz.GetCel(crd)
+	values := cell.Values()
+	for _, v := range values {
+		//log.Println("Checking", v, currentPossible, crd)
+		if v == currentPossible {
+			return false
+		}
+	}
+	return true
 }
 
 // GroupEliminate for a group eliminate what we can
@@ -79,32 +95,23 @@ func (pz Puzzle) GroupEliminate(candidate Coord) (valueModified bool) {
 		// This is the group itterator
 		// It's called once per coord as we go through the group
 		coordFunc := func(crd Coord) bool {
-			cell := pz.GetCel(crd)
-			values := cell.Values()
-			for _, v := range values {
-				//log.Println("Checking", v, currentPossible, crd)
-				if v == currentPossible {
-					// If this value appears in another cell
-					// Then there is no point doing anything else
-					// In this group
-					//log.Println("Matched", v, currentPossible, crd)
-					badValue = currentPossible
-					return false
-				}
+			if !pz.masterCoord(crd, currentPossible) {
+				// If this value appears in another cell
+				// Then there is no point doing anything else
+				// In this group
+				//log.Println("Matched", v, currentPossible, crd)
+				badValue = currentPossible
+				return false
 			}
 			return true
 		}
 		// This is the master funciton that is called once per group
 		mastFunc := func(gr Group) bool {
-			// if the group func has EVER reported false
-			// then it has at some point found a match
+			// run the coordFunc on every cell except the candidate
 			gr.ExOthers(candidate, coordFunc)
 
-			// Therefore if it has set the badValue
-			if badValue != 0 {
-				// then we have has a false, so found a match somewhere in this group
-				// Look for more solutions in more groups
-			} else {
+			if badValue == 0 {
+				// We haven't found a bad value
 				pz.SetVal(currentPossible, candidate)
 				pz.IncreaseDifficuly()
 				valueModified = true
@@ -113,10 +120,37 @@ func (pz Puzzle) GroupEliminate(candidate Coord) (valueModified bool) {
 			}
 			return true
 		}
-
+		// run mastFunc on ever cell in every group
 		allGroups.ExAll(mastFunc)
 	}
 	return
+}
+
+type mapItems map[Value]Coord
+
+func newMapItemsInit(puzSize int) mapItems {
+	checkMap := make(mapItems)
+	checkMap.init(puzSize)
+	return checkMap
+}
+func (mi mapItems) init(puzSize int) {
+	for i := 0; i < puzSize; i++ {
+		mi[Value(i)] = nil
+	}
+}
+func (mi mapItems) checkValues(crd Coord, values []Value) {
+	for _, v := range values {
+		tmp, ok := mi[v]
+		if ok {
+			if tmp == nil {
+				// This is the first find
+				mi[v] = crd
+			} else {
+				// This is the second time we've found the value
+				delete(mi, v)
+			}
+		}
+	}
 }
 
 // LoneItems work on a single group
@@ -124,34 +158,15 @@ func (pz Puzzle) GroupEliminate(candidate Coord) (valueModified bool) {
 // If so then that must be the value for that Cell
 func (pz Puzzle) LoneItems() (valueModified bool) {
 	puzSize := pz.Len()
-	var checkMap map[Value]Coord
+	checkMap := newMapItemsInit(puzSize)
 
-	mapInit := func() {
-		checkMap = make(map[Value]Coord)
-		for i := 0; i < puzSize; i++ {
-			checkMap[Value(i)] = nil
-		}
-	}
 	// If the value existsin only 1 co-ord then we've found it
 	coordFunc := func(crd Coord) bool {
-		cell := pz.GetCel(crd)
-		values := cell.Values()
-		for _, v := range values {
-			tmp, ok := checkMap[v]
-			if ok {
-				if tmp == nil {
-					// This is the first find
-					checkMap[v] = crd
-				} else {
-					// This is the second time we've found the value
-					delete(checkMap, v)
-				}
-			}
-		}
+		checkMap.checkValues(crd, pz.GetCel(crd).Values())
 		return true
 	}
 	mastFunc := func(gr Group) bool {
-		mapInit()
+		checkMap.init(puzSize)
 		gr.ExAll(coordFunc)
 		for value, coordinate := range checkMap {
 			if coordinate != nil && (pz.GetCel(coordinate).Len() > 1) {
@@ -163,12 +178,12 @@ func (pz Puzzle) LoneItems() (valueModified bool) {
 		}
 		return true
 	}
-	allGroups := pz.allGroupSets()
-	allGroups.ExAll(mastFunc)
+	pz.allGroupSets().ExAll(mastFunc)
 	return
 }
 
-func (pz *Puzzle) cntMapFunc(crd Coord, cell *Cell, values []Value, cntMap map[int]*CrdCnt) {
+// Needs a pointer receiver so that NewCrdCnt can build a list to the sources
+func (pz *Puzzle) cntMapFunc(crd Coord, cell *Cell, values []Value, cntMap intMap) {
 
 	// Populating a map from count of items in cells to list
 	valLen := len(values)
@@ -178,11 +193,11 @@ func (pz *Puzzle) cntMapFunc(crd Coord, cell *Cell, values []Value, cntMap map[i
 	} else {
 		itm.Add(crd)
 	}
-	cntMap[valLen] = itm
-
+	cntMap.Add(valLen, itm)
 }
 
-func (pz *Puzzle) valMapFunc(crd Coord, cell *Cell, values []Value, valMap map[Value]*CrdCnt) {
+// Needs a pointer receiver so that NewCrdCnt can build a list to the sources
+func (pz *Puzzle) valMapFunc(crd Coord, cell *Cell, values []Value, valMap valueMap) {
 
 	// Populating a map from value to to cells that occurs in
 	for _, value := range values {
@@ -192,10 +207,10 @@ func (pz *Puzzle) valMapFunc(crd Coord, cell *Cell, values []Value, valMap map[V
 		} else {
 			itm.Add(crd)
 		}
-		valMap[value] = itm
+		valMap.Add(value, itm)
 	}
 }
-func (pz *Puzzle) buildMaps(crd Coord, cntMap map[int]*CrdCnt, valMap map[Value]*CrdCnt) bool {
+func (pz Puzzle) buildMaps(crd Coord, cntMap intMap, valMap valueMap) bool {
 	cell := pz.GetCel(crd)
 	values := cell.Values()
 	pz.cntMapFunc(crd, cell, values, cntMap)
@@ -204,7 +219,7 @@ func (pz *Puzzle) buildMaps(crd Coord, cntMap map[int]*CrdCnt, valMap map[Value]
 }
 
 // For one co-ord Count , make a chain of loops
-func (pz *Puzzle) mkChain(input *CrdCnt) (resultCh []Chain) {
+func (pz Puzzle) mkChain(input *CrdCnt) (resultCh []Chain) {
 	chain := make(Chain, 0)
 	for _, crd := range input.LocList.Items() {
 		cel := pz.GetCel(crd)
@@ -215,7 +230,7 @@ func (pz *Puzzle) mkChain(input *CrdCnt) (resultCh []Chain) {
 	resultCh = chain.SearchChain()
 	return resultCh
 }
-func (pz *Puzzle) cntExamine(cm map[int]*CrdCnt) (resultCh, delCh []Chain) {
+func (pz Puzzle) cntExamine(cm intMap) (resultCh, delCh []Chain) {
 	// Look at the cells that have 2 items in them
 	// Is there another cell that has the same paiting
 	// So called Naked Twins
@@ -230,36 +245,18 @@ func (pz *Puzzle) cntExamine(cm map[int]*CrdCnt) (resultCh, delCh []Chain) {
 	}
 	return
 }
-func (pz *Puzzle) valGrind(value Value, cells Group, vm map[Value]*CrdCnt) bool {
-	modified := false
+func (pz Puzzle) valGrind(value Value, cells Group, vm valueMap) bool {
+	var modified bool
 	// Grind through each of the values in a cell (that's not the one we're given)
 	// looking for another value that appears in one of the cells this appears in
 	for _, crd := range cells.Items() {
-		cel := pz.GetCel(crd)
-		for _, val := range cel.Values() {
-			if val != value && vm[val].Cnt == 1 {
-				// Don't examine our self
-				// Only bother to check values that also only appear in 2 cells
-				if cells.valCheck(val) {
-					// If the value appears in all the cells we appear in
-					// Then we have a match
-					// Build a list of values that are not val,value
-					remVals := cel.NotValues([]Value{val, value})
-
-					if len(remVals) > 0 {
-						cel.RemoveVals(remVals)
-						modified = true
-						//log.Printf("%v is paired with %v: Remove %v\n", val, value, rem_vals)
-					}
-				}
-
-			}
-		}
+		modified = modified || pz.GetCel(crd).grindCrd(value, cells, vm)
 	}
 	return modified
 }
-func (pz *Puzzle) valExamine(vm map[Value]*CrdCnt) bool {
-	modified := false
+
+func (pz Puzzle) valExamine(vm valueMap) bool {
+	var modified bool
 	// If a value appears in only 2 cells
 	// together with another value that only appears in the same 2 cells
 	// It's a hidden twin
@@ -273,20 +270,20 @@ func (pz *Puzzle) valExamine(vm map[Value]*CrdCnt) bool {
 	}
 	return modified
 }
-func (pz *Puzzle) twinWorkGroup(gr Group) bool {
+func (pz Puzzle) twinWorkGroup(gr Group) bool {
 	var modified bool
 	// This is confusing, so let's be totally clear
 	// This will be a map from count of items in cells to list of coords
 	// i.e. 1 -> Cells that have one ite, 2-> cells that have 2 items
-	var cntMap map[int]*CrdCnt
+	var cntMap intMap
 	// This is a map from value to cells that that value occurs in
 	// i.e 1 -> Cells that contain the value 1
-	var valMap map[Value]*CrdCnt
+	var valMap valueMap
 
 	//log.Printf("Examining Group %v\n", pz.StringGroup(gr))
 	// Clear the maps before each group
-	cntMap = make(map[int]*CrdCnt)
-	valMap = make(map[Value]*CrdCnt)
+	cntMap = newIntMap()
+	valMap = newValueMap()
 	// Populate the maps
 	// We only want to parse through the maps once as it is heavy duty
 	lCoordFunc := func(crd Coord) bool {

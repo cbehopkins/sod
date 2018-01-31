@@ -59,32 +59,28 @@ func TestSimplify(t *testing.T) {
 	//log.Println("Row 7\n",testPuzzle)
 	sc()
 
-	if true {
-		testPuzzle.Solve()
-		sc()
+	testPuzzle.Solve()
+	sc()
+	// This is a minimal puzzle so:
+	// Give is an extra solved location
+	testPuzzle.setValC(2, 0, 0)
+	difficultPuz := testPuzzle.MaxDifficulty()
+	//log.Println(difficultPuz)
+	if difficultPuz.roughCheck(*testPuzzle) {
+		// all is good
+		// every solved cell in testPuzzle
+		// exists as a value in difficultPuz
+	} else {
+		log.Fatal("Missing Cells")
 	}
-	if true {
-		// This is a minimal puzzle so:
-		// Give is an extra solved location
-		testPuzzle.setValC(2, 0, 0)
-		difficultPuz := testPuzzle.MaxDifficulty()
-		//log.Println(difficultPuz)
-		if difficultPuz.roughCheck(*testPuzzle) {
-			// all is good
-			// every solved cell in testPuzzle
-			// exists as a value in difficultPuz
-		} else {
-			log.Fatal("Missing Cells")
-		}
 
-		// if MaxDifficulty has worked
-		// there will be some cells marked as solved in testPuzzle
-		// that are not solved in difficultPuz
-		if testPuzzle.lessRoughCheck(difficultPuz) {
-			// If this is true
-			// then every solved difficultPuz cell is solved in testPuzzle
-			log.Fatal("MaxDifficulty has done nothing")
-		}
+	// if MaxDifficulty has worked
+	// there will be some cells marked as solved in testPuzzle
+	// that are not solved in difficultPuz
+	if testPuzzle.lessRoughCheck(difficultPuz) {
+		// If this is true
+		// then every solved difficultPuz cell is solved in testPuzzle
+		log.Fatal("MaxDifficulty has done nothing")
 	}
 }
 func samplePuzzle0() (testPuzzle *Puzzle, expectedResult [][]Value) {
@@ -259,16 +255,13 @@ func TestSolver(t *testing.T) {
 	}
 	sc()
 
-	if true {
-		testPuzzle.Solve()
-		sc()
-	}
-	if true {
-		testPuzzle.TrySolver()
-		sc()
-		if !testPuzzle.Check(expectedResult) {
-			log.Fatal("Unexpected Result", testPuzzle)
-		}
+	testPuzzle.Solve()
+	sc()
+	// Don't care about any
+	_ = testPuzzle.TrySolver()
+	sc()
+	if !testPuzzle.Check(expectedResult) {
+		log.Fatal("Unexpected Result", testPuzzle)
 	}
 }
 
@@ -307,7 +300,7 @@ func TestDuplicate(t *testing.T) {
 		log.Fatal("Unexpected Result should be all 1s", duplicatePuz)
 	}
 
-	testPuzzle.TrySolver()
+	_ = testPuzzle.TrySolver()
 	sc()
 	// This will fail if duplicate deleted main puzzle
 	testPuzzle.Check(expectedResult)

@@ -1,5 +1,7 @@
 package sod
 
+import "log"
+
 // Cell is a single cell of a puzzle
 type Cell struct {
 	Val []Value
@@ -140,4 +142,30 @@ func (cl Cell) others(val Value) []Value {
 		}
 	}
 	return retVal
+}
+
+func (cl *Cell) grindCrd(value Value, cells Group, vm map[Value]*CrdCnt) bool {
+	var modified bool
+	for _, val := range cl.Values() {
+		if val != value && vm[val].Cnt == 1 {
+			// Don't examine our self
+			// Only bother to check values that also only appear in 2 cells
+			if cells.valCheck(val) {
+				// If the value appears in all the cells we appear in
+				// Then we have a match
+				// Build a list of values that are not val,value
+				remVals := cl.NotValues([]Value{val, value})
+
+				if len(remVals) > 0 {
+					err := cl.RemoveVals(remVals)
+					if err != nil {
+						log.Fatal("error in grinding, found values to remove that don't exist", err)
+					}
+					modified = true
+					//log.Printf("%v is paired with %v: Remove %v\n", val, value, rem_vals)
+				}
+			}
+		}
+	}
+	return modified
 }
